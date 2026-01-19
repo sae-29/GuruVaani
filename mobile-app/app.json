@@ -1,0 +1,26 @@
+{
+  "name": "GuruVaani",
+  "displayName": "Guru Vaani - Teacher Reflection",
+  "description": "Empowering educators through structured reflection and professional development",
+  "version": "1.0.0",
+  "versionCode": 1,
+  "minSdkVersion": 21,
+  "compileSdkVersion": 34,
+  "targetSdkVersion": 34,
+  "permissions": [
+    "android.permission.INTERNET",
+    "android.permission.CAMERA",
+    "android.permission.READ_EXTERNAL_STORAGE",
+    "android.permission.WRITE_EXTERNAL_STORAGE",
+    "android.permission.RECORD_AUDIO"
+  ],
+  "orientation": "portrait",
+  "icon": "./assets/icon.png",
+  "splash": {
+    "image": "./assets/splash.png",
+    "resizeMode": "contain",
+    "backgroundColor": "#4F46E5"
+  },
+  "primaryColor": "#4F46E5",
+  "backgroundColor": "#FFFFFF"
+}

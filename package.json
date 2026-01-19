@@ -1,0 +1,51 @@
+{
+  "name": "guru-vaani-platform",
+  "version": "1.0.0",
+  "description": "Teacher Reflection Platform - Mobile App + Web Dashboard",
+  "private": true,
+  "workspaces": [
+    "mobile-app",
+    "teacher-web-app",
+    "backend",
+    "shared"
+  ],
+  "scripts": {
+    "install:all": "npm install && npm run install:mobile && npm run install:web && npm run install:backend",
+    "install:mobile": "cd mobile-app && npm install",
+    "install:web": "cd teacher-web-app && npm install",
+    "install:backend": "cd backend && npm install",
+    "dev:web": "cd teacher-web-app && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:mobile": "cd mobile-app && npm run android",
+    "build:all": "npm run build:web && npm run build:backend",
+    "build:web": "cd teacher-web-app && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "test": "npm run test:web && npm run test:backend",
+    "test:web": "cd teacher-web-app && npm test",
+    "test:backend": "cd backend && npm test",
+    "lint": "npm run lint:web && npm run lint:backend && npm run lint:mobile",
+    "lint:web": "cd teacher-web-app && npm run lint",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:mobile": "cd mobile-app && npm run lint"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.45.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.1.6"
+  },
+  "keywords": [
+    "education",
+    "teacher-reflection",
+    "mobile-app",
+    "web-dashboard",
+    "material-design",
+    "react-native",
+    "react"
+  ],
+  "author": "Guru Vaani Development Team",
+  "license": "MIT"
+}

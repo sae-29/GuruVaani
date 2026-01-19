@@ -1,0 +1,363 @@
+// Prisma schema for Guru Vaani AI-Powered Platform (SQLite-compatible)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  firstName   String
+  lastName    String
+  role        String   @default("TEACHER") // TEACHER, ADMIN, MENTOR, PRINCIPAL, DIET_OFFICIAL, SCERT_OFFICIAL
+  phoneNumber String?
+  avatar      String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Teacher-specific fields
+  employeeId     String?
+  subjects       String? // Comma-separated: "Mathematics,Science"
+  grades         String? // Comma-separated: "Class 1,Class 2"
+  experience     Int?
+  qualifications String?
+  preferredLanguage String @default("en")
+  
+  // Engagement metrics
+  lastActiveAt     DateTime?
+  totalReflections Int      @default(0)
+  completedTrainings Int    @default(0)
+  streakDays       Int      @default(0)
+  nepHours         Float    @default(0)
+
+  // Relationships
+  schoolId    String?
+  school      School?      @relation(fields: [schoolId], references: [id])
+  reflections Reflection[]
+  comments    Comment[]
+  sessions    Session[]
+  badges      UserBadge[]
+  trainings   UserTraining[]
+  notifications UserNotification[]
+
+  @@map("users")
+}
+
+model School {
+  id          String   @id @default(cuid())
+  name        String
+  address     String
+  city        String
+  state       String
+  district    String
+  block       String
+  pincode     String
+  phoneNumber String?
+  email       String?
+  principalId String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  reflections Reflection[]
+
+  @@map("schools")
+}
+
+model Reflection {
+  id          String   @id @default(cuid())
+  title       String?
+  content     String
+  entryMode   String   @default("TEXT") // TEXT, VOICE, MIXED
+  audioUrl    String?
+  transcript  String?
+  type        String   @default("DAILY") // DAILY, WEEKLY, MONTHLY, etc.
+  status      String   @default("DRAFT") // DRAFT, SUBMITTED, AI_ANALYZED, etc.
+  
+  // Context tagging
+  grade       String?
+  subject     String?
+  topic       String?
+  tags        String? // Comma-separated tags
+  
+  // AI analysis
+  sentiment   Float?
+  keywords    String? // Comma-separated keywords
+  priority    String  @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  
+  isPrivate   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  submittedAt DateTime?
+  analyzedAt  DateTime?
+  resolvedAt  DateTime?
+
+  // Relationships
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+  schoolId String?
+  school   School? @relation(fields: [schoolId], references: [id])
+  comments    Comment[]
+  attachments Attachment[]
+  analytics   ReflectionAnalytics?
+  clusterMemberships ClusterReflection[]
+
+  @@map("reflections")
+}
+
+model Cluster {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  keywords    String? // Comma-separated
+  priority    String   @default("MEDIUM")
+  teacherCount Int      @default(0)
+  confidence  Float?
+  centroid    String? // JSON stored as string
+  
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  resolvedAt  DateTime?
+
+  reflections ClusterReflection[]
+  trainings   ClusterTraining[]
+  
+  @@map("clusters")
+}
+
+model ClusterReflection {
+  id           String @id @default(cuid())
+  clusterId    String
+  reflectionId String
+  similarity   Float?
+  
+  cluster    Cluster    @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+  reflection Reflection @relation(fields: [reflectionId], references: [id], onDelete: Cascade)
+  
+  @@unique([clusterId, reflectionId])
+  @@map("cluster_reflections")
+}
+
+model TrainingModule {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  content     String?
+  format      String // VIDEO, AUDIO, TEXT, INTERACTIVE, EXTERNAL_LINK
+  duration    Int
+  videoUrl    String?
+  audioUrl    String?
+  thumbnailUrl String?
+  subjects    String? // Comma-separated
+  grades      String? // Comma-separated
+  topics      String? // Comma-separated
+  difficulty  String   @default("beginner")
+  language    String   @default("en")
+  nepCompetencies String? // Comma-separated
+  viewCount      Int     @default(0)
+  completionRate Float   @default(0)
+  avgRating      Float   @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  publishedAt DateTime?
+
+  clusters     ClusterTraining[]
+  userTrainings UserTraining[]
+  prerequisites ModulePrerequisite[] @relation("PrerequisiteModule")
+  dependents    ModulePrerequisite[] @relation("DependentModule")
+
+  @@map("training_modules")
+}
+
+model ClusterTraining {
+  id        String @id @default(cuid())
+  clusterId String
+  moduleId  String
+  assignedAt DateTime @default(now())
+  
+  cluster Cluster        @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+  module  TrainingModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  
+  @@unique([clusterId, moduleId])
+  @@map("cluster_trainings")
+}
+
+model ModulePrerequisite {
+  id              String @id @default(cuid())
+  prerequisiteId   String
+  dependentId      String
+  
+  prerequisite TrainingModule @relation("PrerequisiteModule", fields: [prerequisiteId], references: [id], onDelete: Cascade)
+  dependent    TrainingModule @relation("DependentModule", fields: [dependentId], references: [id], onDelete: Cascade)
+  
+  @@unique([prerequisiteId, dependentId])
+  @@map("module_prerequisites")
+}
+
+model UserTraining {
+  id          String   @id @default(cuid())
+  userId      String
+  moduleId    String
+  status      String   @default("ASSIGNED") // ASSIGNED, IN_PROGRESS, COMPLETED, SKIPPED
+  progress    Float    @default(0)
+  rating      Int?
+  feedback    String?
+  startedAt   DateTime?
+  completedAt DateTime?
+  assignedAt  DateTime @default(now())
+  
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module TrainingModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, moduleId])
+  @@map("user_trainings")
+}
+
+model Badge {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String
+  iconUrl     String?
+  criteria    String  // JSON stored as string
+  nepHours    Float    @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  
+  userBadges UserBadge[]
+  
+  @@map("badges")
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  badgeId   String
+  earnedAt  DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, badgeId])
+  @@map("user_badges")
+}
+
+model Comment {
+  id          String   @id @default(cuid())
+  content     String
+  isAnonymous Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+  reflectionId String
+  reflection   Reflection @relation(fields: [reflectionId], references: [id], onDelete: Cascade)
+  
+  @@map("comments")
+}
+
+model Attachment {
+  id       String @id @default(cuid())
+  filename String
+  fileUrl  String
+  fileType String
+  fileSize Int
+  isCompressed Boolean @default(false)
+  createdAt DateTime @default(now())
+  
+  reflectionId String
+  reflection   Reflection @relation(fields: [reflectionId], references: [id], onDelete: Cascade)
+  
+  @@map("attachments")
+}
+
+model ReflectionAnalytics {
+  id               String   @id @default(cuid())
+  wordCount        Int
+  readingTime      Int
+  sentimentScore   Float?
+  emotionScores    String? // JSON stored as string
+  keyThemes        String? // Comma-separated
+  improvementAreas String? // Comma-separated
+  urgencyIndicators String? // Comma-separated
+  embedding        String? // JSON stored as string
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  reflectionId String     @unique
+  reflection   Reflection @relation(fields: [reflectionId], references: [id], onDelete: Cascade)
+  
+  @@map("reflection_analytics")
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  type        String // TRAINING_ASSIGNED, MODULE_COMPLETED, etc.
+  title       String
+  message     String
+  data        String? // JSON stored as string
+  channel     String   @default("IN_APP") // PUSH, SMS, USSD, IN_APP
+  subjects    String? // Comma-separated
+  grades      String? // Comma-separated
+  districts   String? // Comma-separated
+  blocks      String? // Comma-separated
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  
+  recipients UserNotification[] @relation("NotificationRecipients")
+  
+  @@map("notifications")
+}
+
+model UserNotification {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String
+  title       String
+  message     String
+  data        String? // JSON stored as string
+  channel     String   @default("IN_APP")
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notificationId String?
+  notification Notification? @relation("NotificationRecipients", fields: [notificationId], references: [id], onDelete: Cascade)
+  
+  @@map("user_notifications")
+}
+
+model Session {
+  id          String   @id @default(cuid())
+  userId      String
+  token       String   @unique
+  refreshToken String? @unique
+  expiresAt   DateTime
+  deviceInfo  String? // JSON stored as string
+  createdAt   DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("sessions")
+}
+
+model SystemConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String // JSON stored as string
+  updatedAt DateTime @updatedAt
+  
+  @@map("system_configs")
+}

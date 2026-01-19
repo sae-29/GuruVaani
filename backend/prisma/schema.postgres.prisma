@@ -1,0 +1,443 @@
+// Prisma schema for Guru Vaani AI-Powered Platform
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  TEACHER
+  ADMIN
+  MENTOR
+  PRINCIPAL
+  DIET_OFFICIAL
+  SCERT_OFFICIAL
+}
+
+enum ReflectionType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  PROJECT_BASED
+  INCIDENT_BASED
+  CHALLENGE_FOCUSED
+}
+
+enum ReflectionStatus {
+  DRAFT
+  SUBMITTED
+  AI_ANALYZED
+  CLUSTERED
+  TRAINING_SENT
+  RESOLVED
+  ARCHIVED
+}
+
+enum EntryMode {
+  TEXT
+  VOICE
+  MIXED
+}
+
+enum TrainingFormat {
+  VIDEO
+  AUDIO
+  TEXT
+  INTERACTIVE
+  EXTERNAL_LINK
+}
+
+enum NotificationChannel {
+  PUSH
+  SMS
+  USSD
+  IN_APP
+}
+
+enum ClusterPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  firstName   String
+  lastName    String
+  role        UserRole @default(TEACHER)
+  phoneNumber String?
+  avatar      String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Teacher-specific fields
+  employeeId     String?
+  subjects       String[] // Array of subjects taught
+  grades         String[] // Array of grades taught
+  experience     Int?
+  qualifications String?
+  preferredLanguage String @default("en")
+  
+  // Engagement metrics
+  lastActiveAt     DateTime?
+  totalReflections Int      @default(0)
+  completedTrainings Int    @default(0)
+  streakDays       Int      @default(0)
+  nepHours         Float    @default(0) // NEP 2020 CPD hours
+
+  // Relationships
+  school      School?      @relation(fields: [schoolId], references: [id])
+  schoolId    String?
+  reflections Reflection[]
+  comments    Comment[]
+  sessions    Session[]
+  badges      UserBadge[]
+  trainings   UserTraining[]
+  notifications UserNotification[]
+
+  @@map("users")
+}
+
+model School {
+  id          String   @id @default(cuid())
+  name        String
+  address     String
+  city        String
+  state       String
+  district    String
+  block       String
+  pincode     String
+  phoneNumber String?
+  email       String?
+  principalId String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  users       User[]
+  reflections Reflection[]
+
+  @@map("schools")
+}
+
+model Reflection {
+  id          String           @id @default(cuid())
+  title       String?
+  content     String
+  entryMode   EntryMode        @default(TEXT)
+  audioUrl    String?          // For voice entries
+  transcript  String?          // AI-generated transcript
+  type        ReflectionType   @default(DAILY)
+  status      ReflectionStatus @default(DRAFT)
+  
+  // Context tagging
+  grade       String?
+  subject     String?
+  topic       String?
+  tags        String[]
+  
+  // AI analysis
+  sentiment   Float?           // -1 to 1 (negative to positive)
+  keywords    String[]         // Extracted keywords
+  priority    ClusterPriority  @default(MEDIUM)
+  
+  isPrivate   Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  submittedAt DateTime?
+  analyzedAt  DateTime?
+  resolvedAt  DateTime?
+
+  // Relationships
+  author   User   @relation(fields: [authorId], references: [id])
+  authorId String
+
+  school   School? @relation(fields: [schoolId], references: [id])
+  schoolId String?
+
+  comments    Comment[]
+  attachments Attachment[]
+  analytics   ReflectionAnalytics?
+  clusterMemberships ClusterReflection[]
+
+  @@map("reflections")
+}
+
+model Cluster {
+  id          String          @id @default(cuid())
+  title       String          // AI-generated or admin-edited
+  description String?
+  keywords    String[]        // Common keywords
+  priority    ClusterPriority @default(MEDIUM)
+  teacherCount Int            @default(0)
+  
+  // AI metadata
+  confidence  Float?          // AI clustering confidence
+  centroid    Json?           // Vector representation
+  
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  resolvedAt  DateTime?
+
+  // Relationships
+  reflections ClusterReflection[]
+  trainings   ClusterTraining[]
+  
+  @@map("clusters")
+}
+
+model ClusterReflection {
+  id           String @id @default(cuid())
+  clusterId    String
+  reflectionId String
+  similarity   Float? // Similarity score to cluster centroid
+  
+  cluster    Cluster    @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+  reflection Reflection @relation(fields: [reflectionId], references: [id], onDelete: Cascade)
+  
+  @@unique([clusterId, reflectionId])
+  @@map("cluster_reflections")
+}
+
+model TrainingModule {
+  id          String          @id @default(cuid())
+  title       String
+  description String
+  content     String?         // Text content or HTML
+  format      TrainingFormat
+  duration    Int             // Duration in minutes
+  
+  // Media files
+  videoUrl    String?
+  audioUrl    String?
+  thumbnailUrl String?
+  
+  // Metadata
+  subjects    String[]
+  grades      String[]
+  topics      String[]
+  difficulty  String          @default("beginner") // beginner, intermediate, advanced
+  language    String          @default("en")
+  
+  // NEP 2020 alignment
+  nepCompetencies String[]
+  
+  // Engagement metrics
+  viewCount      Int     @default(0)
+  completionRate Float   @default(0)
+  avgRating      Float   @default(0)
+  
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  publishedAt DateTime?
+
+  // Relationships
+  clusters     ClusterTraining[]
+  userTrainings UserTraining[]
+  prerequisites ModulePrerequisite[] @relation("PrerequisiteModule")
+  dependents    ModulePrerequisite[] @relation("DependentModule")
+
+  @@map("training_modules")
+}
+
+model ClusterTraining {
+  id              String @id @default(cuid())
+  clusterId       String
+  trainingId      String
+  relevanceScore  Float? // AI-calculated relevance
+  dispatchedAt    DateTime?
+  
+  cluster  Cluster        @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+  training TrainingModule @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  
+  @@unique([clusterId, trainingId])
+  @@map("cluster_trainings")
+}
+
+model UserTraining {
+  id           String    @id @default(cuid())
+  userId       String
+  trainingId   String
+  startedAt    DateTime?
+  completedAt  DateTime?
+  rating       Int?      // 1-5 stars
+  feedback     String?
+  timeSpent    Int?      // Minutes spent
+  
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  training TrainingModule @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, trainingId])
+  @@map("user_trainings")
+}
+
+model ModulePrerequisite {
+  id                String @id @default(cuid())
+  moduleId          String
+  prerequisiteId    String
+  
+  module       TrainingModule @relation("DependentModule", fields: [moduleId], references: [id], onDelete: Cascade)
+  prerequisite TrainingModule @relation("PrerequisiteModule", fields: [prerequisiteId], references: [id], onDelete: Cascade)
+  
+  @@unique([moduleId, prerequisiteId])
+  @@map("module_prerequisites")
+}
+
+model Badge {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String
+  iconUrl     String?
+  criteria    Json     // Conditions to earn badge
+  nepHours    Float    @default(0) // CPD hours awarded
+  
+  createdAt DateTime @default(now())
+  
+  // Relationships
+  users UserBadge[]
+  
+  @@map("badges")
+}
+
+model UserBadge {
+  id       String   @id @default(cuid())
+  userId   String
+  badgeId  String
+  earnedAt DateTime @default(now())
+  
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, badgeId])
+  @@map("user_badges")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  isAnonymous Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  author   User   @relation(fields: [authorId], references: [id])
+  authorId String
+
+  reflection   Reflection @relation(fields: [reflectionId], references: [id], onDelete: Cascade)
+  reflectionId String
+
+  @@map("comments")
+}
+
+model Attachment {
+  id       String @id @default(cuid())
+  filename String
+  fileUrl  String
+  fileType String
+  fileSize Int
+  isCompressed Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  // Relationships
+  reflection   Reflection @relation(fields: [reflectionId], references: [id], onDelete: Cascade)
+  reflectionId String
+
+  @@map("attachments")
+}
+
+model ReflectionAnalytics {
+  id               String   @id @default(cuid())
+  wordCount        Int
+  readingTime      Int      // in minutes
+  sentimentScore   Float?   // -1 to 1
+  emotionScores    Json?    // Joy, anger, fear, etc.
+  keyThemes        String[]
+  improvementAreas String[]
+  urgencyIndicators String[] // Keywords indicating urgency
+  
+  // AI embeddings for similarity
+  embedding        Json?    // Vector representation
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relationships
+  reflection   Reflection @relation(fields: [reflectionId], references: [id], onDelete: Cascade)
+  reflectionId String     @unique
+
+  @@map("reflection_analytics")
+}
+
+model Notification {
+  id          String              @id @default(cuid())
+  title       String
+  message     String
+  channel     NotificationChannel
+  targetRole  UserRole?           // If null, targets all users
+  
+  // Targeting filters
+  subjects    String[]            // Target teachers of specific subjects
+  grades      String[]            // Target teachers of specific grades
+  districts   String[]            // Geographic targeting
+  blocks      String[]
+  
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  expiresAt   DateTime?
+  
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  recipients UserNotification[]
+  
+  @@map("notifications")
+}
+
+model UserNotification {
+  id             String    @id @default(cuid())
+  userId         String
+  notificationId String
+  readAt         DateTime?
+  clickedAt      DateTime?
+  
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, notificationId])
+  @@map("user_notifications")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  deviceInfo Json?   // Device type, OS version, app version
+  createdAt DateTime @default(now())
+
+  // Relationships
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@map("sessions")
+}
+
+model SystemConfig {
+  id    String @id @default(cuid())
+  key   String @unique
+  value Json
+  
+  updatedAt DateTime @updatedAt
+  
+  @@map("system_config")
+}
