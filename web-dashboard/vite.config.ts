@@ -22,11 +22,5 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
-  },
-  test: {
-    globals: true,
-    environment: 'happy-dom',
-    setupFiles: './src/test/setup.ts',
-    css: true,
-  },
+  }
 });
