@@ -9,6 +9,7 @@ import {
   CardContent,
   Chip,
   FormControl,
+  InputLabel,
   Select,
   MenuItem,
   IconButton,
@@ -17,6 +18,7 @@ import {
   Dialog,
   DialogContent,
   Zoom,
+  Fade,
   Container,
   Paper,
 } from '@mui/material';
@@ -395,10 +397,11 @@ const CreateEntryScreen: React.FC = () => {
             </Typography>
             <TextField
               fullWidth
-              multiline
-              rows={8}
+
+
               value={formData.content}
-              onChange={(e) => handleContentChange(e.target.value)}
+              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              rows={8}
               required
               placeholder="Start typing your reflection here..."
               variant="outlined"

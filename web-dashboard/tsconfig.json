@@ -22,12 +22,6 @@
     "paths": {
       "@/*": [
         "src/*"
-      ],
-      "guru-vaani-shared": [
-        "../shared/src/index.ts"
-      ],
-      "guru-vaani-shared/*": [
-        "../shared/src/*"
       ]
     }
   },
