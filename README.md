@@ -79,7 +79,7 @@ Both the Teacher App and Admin Dashboard are configured for Vercel deployment.
 **Teacher Web App:**
 1. Push code to GitHub
 2. Import project in Vercel
-3. Set Root Directory: `teacher-web-app`
+3. **Important**: Set Root Directory to the repository root (`.`), not `teacher-web-app`
 4. Configure Environment Variables in Vercel Dashboard:
    - Variable: `VITE_API_URL`
    - Value: Your backend API URL (e.g., `https://guru-vaani-backend.onrender.com/api`)
@@ -88,15 +88,17 @@ Both the Teacher App and Admin Dashboard are configured for Vercel deployment.
 
 **Admin Dashboard:**
 1. Push code to GitHub
-2. Import project in Vercel
-3. Set Root Directory: `web-dashboard`
+2. Import project in Vercel (or create a new project)
+3. **Important**: Set Root Directory to the repository root (`.`), not `web-dashboard`
 4. Configure Environment Variables in Vercel Dashboard:
    - Variable: `VITE_API_URL`
    - Value: Your backend API URL (e.g., `https://guru-vaani-backend.onrender.com/api`)
    - Environments: Production, Preview, Development
 5. Deploy
 
-> **Note**: Environment variables must be set in the Vercel dashboard (Project Settings → Environment Variables), not in `vercel.json`.
+> **Note**: 
+> - Environment variables must be set in the Vercel dashboard (Project Settings → Environment Variables), not in `vercel.json`.
+> - The `vercel.json` files are configured to build the shared module first, then the respective frontend app.
 
 ### Backend Deployment (Render)
 
