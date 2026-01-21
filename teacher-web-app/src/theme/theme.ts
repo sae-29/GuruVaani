@@ -1,35 +1,42 @@
 import { createTheme } from '@mui/material/styles';
+import { designTokens } from 'guru-vaani-shared';
 
 export const theme = createTheme({
   palette: {
-    primary: {
-      main: '#FF7043',
-    },
-    secondary: {
-      main: '#26A69A',
-    },
-    background: {
-      default: '#FAFAFA',
-    },
+    primary: designTokens.colors.primary,
+    secondary: designTokens.colors.secondary,
+    background: designTokens.colors.background,
+    text: designTokens.colors.text,
+    error: designTokens.colors.error,
+    warning: designTokens.colors.warning,
+    success: designTokens.colors.success,
   },
   typography: {
-    fontFamily: '"Noto Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+    fontFamily: designTokens.typography.fontFamily,
+    h1: { fontSize: designTokens.typography.h1, fontWeight: 700 },
+    h2: { fontSize: designTokens.typography.h2, fontWeight: 700 },
+    h3: { fontSize: designTokens.typography.h3, fontWeight: 700 },
+    body1: { fontSize: designTokens.typography.body1 },
+    body2: { fontSize: designTokens.typography.body2 },
   },
   shape: {
-    borderRadius: 12, // Default curved corners for all components
+    borderRadius: designTokens.shape.borderRadius,
   },
   components: {
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 12, // Curved corners for all Cards
+          borderRadius: designTokens.shape.borderRadius,
+          boxShadow: designTokens.shadows.card,
         },
       },
     },
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 12, // Curved corners for all Buttons
+          borderRadius: designTokens.shape.borderRadius,
+          textTransform: 'none',
+          fontWeight: 600,
         },
       },
     },
@@ -37,7 +44,8 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
-            borderRadius: 12, // Curved corners for TextFields
+            borderRadius: designTokens.shape.borderRadius,
+            height: 48,
           },
         },
       },
@@ -45,7 +53,7 @@ export const theme = createTheme({
     MuiChip: {
       styleOverrides: {
         root: {
-          borderRadius: 8, // Slightly curved for Chips
+          borderRadius: 8,
         },
       },
     },

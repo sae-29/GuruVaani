@@ -93,7 +93,7 @@ class GrokService {
    */
   async generateTeacherResponse(input: TeacherAIInput): Promise<TeacherAIOutput> {
     const cacheKey = `${this.cachePrefix}teacher:${this.hashInput(input.diaryText)}`;
-    
+
     // Check cache first
     try {
       if (redisClient && typeof redisClient.get === 'function') {
@@ -108,7 +108,7 @@ class GrokService {
     }
 
     const prompt = this.buildTeacherPrompt(input);
-    
+
     try {
       const response = await this.callGrokAPI(prompt);
       const parsed = this.parseTeacherResponse(response);
@@ -133,7 +133,7 @@ class GrokService {
    */
   async generateAdminAnalytics(input: AdminAIInput): Promise<AdminAIOutput> {
     const cacheKey = `${this.cachePrefix}admin:${this.hashInput(JSON.stringify(input.entries))}`;
-    
+
     // Check cache
     try {
       if (redisClient && typeof redisClient.get === 'function') {
@@ -148,7 +148,7 @@ class GrokService {
     }
 
     const prompt = this.buildAdminPrompt(input);
-    
+
     try {
       const response = await this.callGrokAPI(prompt);
       const parsed = this.parseAdminResponse(response);
@@ -252,7 +252,7 @@ Respond in JSON format:
    * Build admin-side prompt
    */
   private buildAdminPrompt(input: AdminAIInput): string {
-    const entriesSummary = input.entries.map((e, i) => 
+    const entriesSummary = input.entries.map((e, i) =>
       `Entry ${i + 1}: "${e.content.substring(0, 200)}..." (Grade: ${e.grade || 'N/A'}, Subject: ${e.subject || 'N/A'}, Sentiment: ${e.sentiment || 'N/A'})`
     ).join('\n');
 
@@ -361,6 +361,20 @@ Respond in JSON format:
       alerts: [],
       recommendations: [],
     };
+  }
+
+  /**
+   * Parse a simple JSON array of strings
+   */
+  private parseSimpleArray(response: string): string[] {
+    try {
+      const jsonMatch = response.match(/\[[\s\S]*\]/);
+      const jsonStr = jsonMatch ? jsonMatch[0] : response;
+      return JSON.parse(jsonStr);
+    } catch (error) {
+      logger.error('Failed to parse simple array', error);
+      return [];
+    }
   }
 
   /**

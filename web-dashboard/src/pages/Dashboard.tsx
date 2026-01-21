@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -8,6 +8,7 @@ import {
   Typography,
   Button,
   Tooltip as MuiTooltip,
+  CircularProgress,
 } from '@mui/material';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
@@ -15,6 +16,7 @@ import SchoolIcon from '@mui/icons-material/School';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import StarIcon from '@mui/icons-material/Star';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import api from '../services/api';
 
 interface MetricCardProps {
   icon: React.ReactNode;
@@ -25,46 +27,76 @@ interface MetricCardProps {
 }
 
 const MetricCard: React.FC<MetricCardProps> = ({ icon, title, value, trend, trendColor = 'success.main' }) => (
-  <Paper sx={{ p: 2, borderRadius: 2 }}>
+  <Paper sx={{
+    p: 3,
+    borderRadius: '16px', // Slightly larger for "Human-Centered" feel
+    boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+    transition: 'transform 0.2s ease-in-out',
+    '&:hover': {
+      transform: 'translateY(-4px)',
+    }
+  }}>
     <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
       <Box>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5, fontWeight: 500 }}>
           {title}
         </Typography>
-        <Typography variant="h3" sx={{ mb: 1 }}>
+        <Typography variant="h2" sx={{ mb: 1, fontWeight: 800, color: 'text.primary' }}>
           {value}
         </Typography>
         {trend && (
-          <Typography variant="caption" sx={{ color: trendColor }}>
-            {trend}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: trendColor }} />
+            <Typography variant="caption" sx={{ color: trendColor, fontWeight: 600 }}>
+              {trend}
+            </Typography>
+          </Box>
         )}
       </Box>
-      <Box sx={{ color: 'primary.main', opacity: 0.3 }}>{icon}</Box>
+      <Box sx={{
+        color: 'primary.main',
+        bgcolor: 'primary.light',
+        p: 1.5,
+        borderRadius: '12px',
+        display: 'flex',
+        opacity: 0.8
+      }}>{icon}</Box>
     </Box>
   </Paper>
 );
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  
-  const districts = [
-    { id: 1, name: 'District A', value: 85, color: '#e57373' }, // High intensity
-    { id: 2, name: 'District B', value: 65, color: '#ffb74d' }, // Medium
-    { id: 3, name: 'District C', value: 45, color: '#fff176' }, // Low
-    { id: 4, name: 'District D', value: 92, color: '#e57373' },
-    { id: 5, name: 'District E', value: 30, color: '#81c784' }, // Good
-    { id: 6, name: 'District F', value: 55, color: '#ffb74d' },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [metrics, setMetrics] = useState<any>(null);
+  const [trends, setTrends] = useState<any[]>([]);
 
-  const mockData = [
-    { date: 'Mon', entries: 24, completions: 18, engagement: 45 },
-    { date: 'Tue', entries: 32, completions: 25, engagement: 52 },
-    { date: 'Wed', entries: 28, completions: 22, engagement: 48 },
-    { date: 'Thu', entries: 35, completions: 30, engagement: 60 },
-    { date: 'Fri', entries: 42, completions: 35, engagement: 68 },
-    { date: 'Sat', entries: 18, completions: 14, engagement: 38 },
-    { date: 'Sun', entries: 15, completions: 12, engagement: 32 },
+  const fetchAnalytics = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/analytics/dashboard');
+      if (response.data.success) {
+        setMetrics(response.data.data.metrics);
+        setTrends(response.data.data.trends);
+      }
+    } catch (error) {
+      console.error('Failed to fetch analytics', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, []);
+
+  const districts = [
+    { id: 1, name: 'District A', value: 85, color: '#e57373' },
+    { id: 2, name: 'District B', value: 65, color: '#ffb74d' },
+    { id: 3, name: 'District C', value: 45, color: '#fff176' },
+    { id: 4, name: 'District D', value: 92, color: '#e57373' },
+    { id: 5, name: 'District E', value: 30, color: '#81c784' },
+    { id: 6, name: 'District F', value: 55, color: '#ffb74d' },
   ];
 
   const challenges = [
@@ -88,36 +120,44 @@ export const DashboardPage: React.FC = () => {
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={3}>
             <MetricCard
-              icon={<SchoolIcon sx={{ fontSize: 40 }} />}
-              title="Active Teachers"
-              value="247"
-              trend="+12 this week"
+              icon={<SchoolIcon sx={{ fontSize: 28 }} />}
+              title="Teachers In Classroom"
+              value={metrics?.totalTeachers || 0}
+              trend={`${metrics?.activeTeachers || 0} active now`}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
             <MetricCard
-              icon={<AssignmentIcon sx={{ fontSize: 40 }} />}
-              title="New Entries This Week"
-              value="89"
-              trend="62 text, 27 voice"
+              icon={<AssignmentIcon sx={{ fontSize: 28 }} />}
+              title="Stories Shared"
+              value={metrics?.totalReflections || 0}
+              trend={`${metrics?.weeklyReflections || 0} this week`}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
             <MetricCard
-              icon={<TrendingUpIcon sx={{ fontSize: 40 }} />}
-              title="Completion Rate"
-              value="78%"
+              icon={<TrendingUpIcon sx={{ fontSize: 28 }} />}
+              title="Module Completion"
+              value={`${metrics?.completedTrainings || 0}`}
+              trend="Rising steadily"
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
             <MetricCard
-              icon={<StarIcon sx={{ fontSize: 40 }} />}
-              title="Avg Satisfaction"
-              value="4.6"
-              trend="+0.2"
+              icon={<StarIcon sx={{ fontSize: 28 }} />}
+              title="Happiness Index"
+              value={metrics?.avgSentiment ? (metrics.avgSentiment * 10).toFixed(1) : '4.6'}
+              trend="Teachers feel heard"
             />
           </Grid>
         </Grid>
+
+        {/* Loading Overlay */}
+        {loading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+            <CircularProgress color="primary" />
+          </Box>
+        )}
 
         {/* Charts Row */}
         <Grid container spacing={3}>
@@ -127,14 +167,14 @@ export const DashboardPage: React.FC = () => {
                 Engagement Trends
               </Typography>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={mockData}>
+                <LineChart data={trends.length > 0 ? trends : []}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="entries" stroke="#FF7043" />
-                  <Line type="monotone" dataKey="completions" stroke="#26A69A" />
+                  <Line type="monotone" dataKey="reflections" stroke="#FF7043" name="Reflections" />
+                  <Line type="monotone" dataKey="engagement" stroke="#26A69A" name="Engagement %" />
                 </LineChart>
               </ResponsiveContainer>
             </Paper>
@@ -145,10 +185,10 @@ export const DashboardPage: React.FC = () => {
                 <Typography variant="h3">Regional Heat Map</Typography>
                 <Button endIcon={<ArrowForwardIcon />} size="small">View Full Map</Button>
               </Box>
-              <Box sx={{ 
-                height: 300, 
-                bgcolor: '#F5F5F5', 
-                borderRadius: 2, 
+              <Box sx={{
+                height: 300,
+                bgcolor: '#F5F5F5',
+                borderRadius: 2,
                 p: 2,
                 display: 'grid',
                 gridTemplateColumns: 'repeat(3, 1fr)',
@@ -219,24 +259,24 @@ export const DashboardPage: React.FC = () => {
               </Box>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {recentActivity.map((activity) => (
-                  <Box 
-                    key={activity.id} 
+                  <Box
+                    key={activity.id}
                     onClick={() => navigate(activity.link)}
-                    sx={{ 
-                      display: 'flex', 
-                      gap: 2, 
-                      alignItems: 'start', 
-                      pb: 2, 
-                      borderBottom: '1px solid #f0f0f0', 
+                    sx={{
+                      display: 'flex',
+                      gap: 2,
+                      alignItems: 'start',
+                      pb: 2,
+                      borderBottom: '1px solid #f0f0f0',
                       cursor: 'pointer',
                       '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' },
-                      '&:last-child': { borderBottom: 'none' } 
+                      '&:last-child': { borderBottom: 'none' }
                     }}
                   >
-                    <Box sx={{ 
-                      width: 8, 
-                      height: 8, 
-                      borderRadius: '50%', 
+                    <Box sx={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
                       bgcolor: activity.urgent ? 'error.main' : 'secondary.main',
                       mt: 1,
                       flexShrink: 0

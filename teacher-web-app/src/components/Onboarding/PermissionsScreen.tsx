@@ -11,7 +11,8 @@ import {
   ListItemText,
   ListItemSecondaryAction,
 } from '@mui/material';
-import { Mic, Notifications, CheckCircle } from '@mui/icons-material';
+import { Mic, Notifications, CheckCircle, Shield } from '@mui/icons-material';
+import { designTokens } from 'guru-vaani-shared';
 
 const PermissionsScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -45,9 +46,9 @@ const PermissionsScreen: React.FC = () => {
 
   const permissions = [
     {
-      icon: <Mic sx={{ fontSize: 48, color: microphoneGranted ? '#26A69A' : '#FF7043' }} />,
-      title: 'Voice Recording',
-      description: 'For audio diary entries',
+      icon: <Mic sx={{ fontSize: 40, color: microphoneGranted ? designTokens.colors.secondary.main : designTokens.colors.primary.main }} />,
+      title: 'Voice Diary',
+      description: 'Your voice is your fastest tool. Allow us to listen and transcribe your classroom stories.',
       granted: microphoneGranted,
       onRequest: requestMicrophonePermission,
     },
@@ -65,37 +66,57 @@ const PermissionsScreen: React.FC = () => {
   ];
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
-          We Need Your Permission
+    <Container maxWidth="md" sx={{ py: 6 }}>
+      <Box sx={{ textAlign: 'center', mb: 6 }}>
+        <Box sx={{
+          display: 'inline-flex',
+          p: 2,
+          bgcolor: 'primary.light',
+          borderRadius: '16px',
+          mb: 2,
+          color: 'primary.main'
+        }}>
+          <Shield sx={{ fontSize: 32 }} />
+        </Box>
+        <Typography variant="h2" fontWeight="800" sx={{ mb: 1 }}>
+          Safety & Privacy
         </Typography>
-        <Typography variant="body1" color="text.secondary">
-          These permissions help us provide the best experience
+        <Typography variant="body1" color="text.secondary" sx={{ fontWeight: 500 }}>
+          Your data is encrypted and used only to support your teaching journey. 🙏
         </Typography>
       </Box>
 
       {permissions.map((permission, index) => (
         <Card
           key={index}
+          elevation={0}
           sx={{
-            mb: 2,
-            backgroundColor: permission.granted ? '#26A69A20' : 'white',
+            mb: 2.5,
+            borderRadius: '20px',
+            border: '2px solid',
+            borderColor: permission.granted ? 'secondary.main' : 'rgba(0,0,0,0.05)',
+            bgcolor: permission.granted ? `${designTokens.colors.secondary.main}08` : 'white',
           }}
         >
-          <ListItem>
-            <ListItemIcon>{permission.icon}</ListItemIcon>
+          <ListItem sx={{ py: 3 }}>
+            <ListItemIcon sx={{ mr: 1 }}>{permission.icon}</ListItemIcon>
             <ListItemText
               primary={permission.title}
               secondary={permission.description}
-              primaryTypographyProps={{ fontWeight: 600 }}
+              primaryTypographyProps={{ fontWeight: 800, fontSize: '1.2rem' }}
+              secondaryTypographyProps={{ fontWeight: 500, fontSize: '0.9rem' }}
             />
             <ListItemSecondaryAction>
               {permission.granted ? (
-                <CheckCircle sx={{ color: '#26A69A', fontSize: 32 }} />
+                <CheckCircle sx={{ color: 'secondary.main', fontSize: 32 }} />
               ) : (
-                <Button variant="outlined" onClick={permission.onRequest}>
-                  Allow
+                <Button
+                  variant="contained"
+                  disableElevation
+                  onClick={permission.onRequest}
+                  sx={{ borderRadius: '12px', fontWeight: 700 }}
+                >
+                  Enable
                 </Button>
               )}
             </ListItemSecondaryAction>
@@ -103,20 +124,32 @@ const PermissionsScreen: React.FC = () => {
         </Card>
       ))}
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 4 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 6 }}>
         <Button
           variant="contained"
           size="large"
+          disableElevation
           onClick={handleContinue}
           sx={{
-            backgroundColor: '#FF7043',
-            '&:hover': { backgroundColor: '#FF5722' },
+            py: 2,
+            borderRadius: '16px',
+            fontWeight: 800,
+            fontSize: '1.1rem',
+            textTransform: 'none'
           }}
         >
           Continue
         </Button>
-        <Button variant="text" onClick={handleSkip} sx={{ color: 'text.secondary' }}>
-          Skip for Now
+        <Button
+          variant="text"
+          onClick={handleSkip}
+          sx={{
+            color: 'text.secondary',
+            textTransform: 'none',
+            fontWeight: 600
+          }}
+        >
+          I'll choose later
         </Button>
       </Box>
     </Container>

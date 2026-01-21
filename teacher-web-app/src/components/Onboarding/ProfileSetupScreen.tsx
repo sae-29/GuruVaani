@@ -13,7 +13,7 @@ import {
   MenuItem,
   FormHelperText,
 } from '@mui/material';
-import { Person, School } from '@mui/icons-material';
+import { Person, School, LocalLibrary, Star } from '@mui/icons-material';
 
 interface ProfileSetupScreenProps {
   onComplete?: () => void;
@@ -94,13 +94,24 @@ const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ onComplete }) =
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
-          Tell Us About Yourself
+    <Container maxWidth="md" sx={{ py: 6 }}>
+      <Box sx={{ textAlign: 'center', mb: 6 }}>
+        <Box sx={{
+          display: 'inline-flex',
+          p: 2,
+          bgcolor: 'secondary.light',
+          borderRadius: '24px',
+          mb: 2,
+          color: 'secondary.main',
+          transform: 'rotate(5deg)'
+        }}>
+          <Person sx={{ fontSize: 32 }} />
+        </Box>
+        <Typography variant="h2" fontWeight="800" sx={{ mb: 1 }}>
+          {formData.name ? `Namaste, ${formData.name.split(' ')[0]}!` : "Welcome, Teacher!"}
         </Typography>
-        <Typography variant="body1" color="text.secondary">
-          This helps us personalize your experience
+        <Typography variant="body1" color="text.secondary" sx={{ fontWeight: 500 }}>
+          Help us tailor Guru Vaani to your unique classroom.
         </Typography>
       </Box>
 
@@ -108,22 +119,24 @@ const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ onComplete }) =
         <TextField
           fullWidth
           label="Your Name"
-          placeholder="Enter full name"
+          placeholder="e.g. Smt. Lakshmi"
           value={formData.name}
           onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
           error={!!errors.name}
           helperText={errors.name}
+          sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px' } }}
           InputProps={{
-            startAdornment: <Person sx={{ mr: 1, color: 'text.secondary' }} />,
+            startAdornment: <Person sx={{ mr: 1, color: 'primary.main' }} />,
           }}
         />
 
         <FormControl fullWidth error={!!errors.school}>
-          <InputLabel>School/Institution</InputLabel>
+          <InputLabel>Your School</InputLabel>
           <Select
             value={formData.school}
             onChange={(e) => setFormData((prev) => ({ ...prev, school: e.target.value }))}
-            startAdornment={<School sx={{ mr: 1 }} />}
+            sx={{ borderRadius: '16px' }}
+            startAdornment={<School sx={{ mr: 1, color: 'primary.main' }} />}
           >
             {schools.map((school) => (
               <MenuItem key={school} value={school}>
@@ -135,52 +148,81 @@ const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ onComplete }) =
         </FormControl>
 
         {formData.school && (
-          <TextField
-            fullWidth
-            label="District"
-            value={formData.district || 'Auto-filled from school'}
-            disabled
-            sx={{ backgroundColor: 'grey.100' }}
-          />
+          <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: '12px', border: '1px dashed', borderColor: 'divider' }}>
+            <Typography variant="caption" color="text.secondary" display="block">
+              District
+            </Typography>
+            <Typography variant="body2" fontWeight="700">
+              {formData.district || 'Mandya District'}
+            </Typography>
+          </Box>
         )}
 
         <Box>
-          <Typography variant="body2" fontWeight="medium" gutterBottom>
-            Subjects You Teach
+          <Typography variant="subtitle1" fontWeight="800" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <LocalLibrary fontSize="small" color="primary" /> Subjects You Teach
           </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {subjects.map((subject) => (
-              <Chip
-                key={subject}
-                label={subject}
-                onClick={() => toggleSubject(subject)}
-                color={formData.subjects.includes(subject) ? 'primary' : 'default'}
-              />
-            ))}
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1.5 }}>
+            {subjects.map((subject) => {
+              const selected = formData.subjects.includes(subject);
+              return (
+                <Chip
+                  key={subject}
+                  label={subject}
+                  onClick={() => toggleSubject(subject)}
+                  sx={{
+                    borderRadius: '10px',
+                    fontWeight: 600,
+                    px: 1,
+                    py: 2.5,
+                    bgcolor: selected ? 'primary.main' : 'white',
+                    color: selected ? 'white' : 'text.primary',
+                    border: '1px solid',
+                    borderColor: selected ? 'primary.main' : 'rgba(0,0,0,0.1)',
+                    '&:hover': {
+                      bgcolor: selected ? 'primary.dark' : 'rgba(0,0,0,0.05)'
+                    }
+                  }}
+                />
+              );
+            })}
           </Box>
           {errors.subjects && (
-            <FormHelperText error sx={{ mt: 1 }}>
+            <FormHelperText error sx={{ mt: 1, fontWeight: 600 }}>
               {errors.subjects}
             </FormHelperText>
           )}
         </Box>
 
         <Box>
-          <Typography variant="body2" fontWeight="medium" gutterBottom>
-            Grades You Teach
+          <Typography variant="subtitle1" fontWeight="800" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Star fontSize="small" color="primary" /> Grades You Teach
           </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {grades.map((grade) => (
-              <Chip
-                key={grade}
-                label={`Class ${grade}`}
-                onClick={() => toggleGrade(grade)}
-                color={formData.grades.includes(grade) ? 'primary' : 'default'}
-              />
-            ))}
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1.5 }}>
+            {grades.map((grade) => {
+              const selected = formData.grades.includes(grade);
+              return (
+                <Chip
+                  key={grade}
+                  label={`Class ${grade}`}
+                  onClick={() => toggleGrade(grade)}
+                  variant={selected ? "filled" : "outlined"}
+                  sx={{
+                    borderRadius: '10px',
+                    fontWeight: 600,
+                    borderColor: 'divider',
+                    color: selected ? 'white' : 'text.secondary',
+                    bgcolor: selected ? 'secondary.main' : 'transparent',
+                    '&:hover': {
+                      bgcolor: selected ? 'secondary.dark' : 'rgba(0,0,0,0.05)'
+                    }
+                  }}
+                />
+              );
+            })}
           </Box>
           {errors.grades && (
-            <FormHelperText error sx={{ mt: 1 }}>
+            <FormHelperText error sx={{ mt: 1, fontWeight: 600 }}>
               {errors.grades}
             </FormHelperText>
           )}
@@ -189,16 +231,20 @@ const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ onComplete }) =
         <Button
           variant="contained"
           size="large"
+          disableElevation
           onClick={handleComplete}
           disabled={!formData.name || !formData.school}
           sx={{
-            mt: 2,
-            py: 1.5,
-            backgroundColor: '#FF7043',
-            '&:hover': { backgroundColor: '#FF5722' },
+            mt: 4,
+            py: 2,
+            borderRadius: '16px',
+            fontWeight: 800,
+            fontSize: '1.1rem',
+            textTransform: 'none',
+            boxShadow: '0 8px 24px rgba(255, 112, 67, 0.2)'
           }}
         >
-          Complete Setup
+          Finish & Enter Dashboard 🏠
         </Button>
       </Box>
     </Container>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -14,109 +14,88 @@ import {
   Fab,
   Menu,
   MenuItem,
-  Alert,
+  Button,
+  CircularProgress,
+  Divider,
 } from '@mui/material';
 import {
   Search,
-  Add,
   FilterList,
-  MoreVert,
-  Psychology,
+  AutoAwesome,
+  Lightbulb,
+  HistoryEdu,
+  Refresh,
 } from '@mui/icons-material';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const EntriesScreen: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterAnchor, setFilterAnchor] = useState<null | HTMLElement>(null);
+  const [reflections, setReflections] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data
-  const reflections = [
-    {
-      id: '1',
-      title: 'Math Division - Class 4',
-      content: 'Today I taught division to my Class 4 students. Many students struggled with the concept of remainders...',
-      subject: 'Mathematics',
-      grade: 'Class 4',
-      mood: 'FRUSTRATED',
-      sentiment: -0.2,
-      tags: ['division', 'visual-aids', 'struggling-students'],
-      aiSuggestions: ['Try using manipulatives', 'Consider peer tutoring'],
-      createdAt: '2024-01-15T10:30:00Z',
-      status: 'AI_ANALYZED',
-    },
-    {
-      id: '2',
-      title: 'Science Experiment Success',
-      content: 'The volcano experiment was a huge hit! Students were engaged and asking great questions...',
-      subject: 'Science',
-      grade: 'Class 5',
-      mood: 'EXCITED',
-      sentiment: 0.8,
-      tags: ['experiment', 'engagement', 'hands-on'],
-      aiSuggestions: ['Build on this success', 'Document student questions'],
-      createdAt: '2024-01-14T14:20:00Z',
-      status: 'CLUSTERED',
-    },
-    {
-      id: '3',
-      title: 'Reading Comprehension Challenge',
-      content: 'Some students are still struggling with reading comprehension. Need new strategies...',
-      subject: 'English',
-      grade: 'Class 3',
-      mood: 'NEUTRAL',
-      sentiment: 0.1,
-      tags: ['reading', 'comprehension', 'strategies'],
-      aiSuggestions: ['Try guided reading', 'Use graphic organizers'],
-      createdAt: '2024-01-13T09:15:00Z',
-      status: 'AI_ANALYZED',
-    },
-  ];
-
-  const getMoodColor = (mood: string) => {
-    switch (mood) {
-      case 'HAPPY': return '#4CAF50';
-      case 'EXCITED': return '#FFD700';
-      case 'NEUTRAL': return '#757575';
-      case 'FRUSTRATED': return '#E53935';
-      case 'CONFUSED': return '#FF9800';
-      default: return '#757575';
+  const fetchEntries = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE}/entries/my`, {
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        }
+      });
+      const result = await response.json();
+      if (result.success) {
+        setReflections(result.data.entries || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch entries', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getSentimentLabel = (sentiment: number) => {
-    if (sentiment > 0.2) return { label: 'Positive', color: 'success' };
-    if (sentiment < -0.2) return { label: 'Negative', color: 'error' };
-    return { label: 'Neutral', color: 'default' };
-  };
+  useEffect(() => {
+    fetchEntries();
+  }, []);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'AI_ANALYZED': return 'secondary';
-      case 'CLUSTERED': return 'success';
-      default: return 'default';
-    }
+  const getMoodFromSentiment = (sentiment: number | null) => {
+    if (sentiment === null) return { label: 'NEUTRAL', color: '#757575' };
+    if (sentiment > 0.6) return { label: 'EXCITED', color: '#FFD700' };
+    if (sentiment > 0.2) return { label: 'HAPPY', color: '#4CAF50' };
+    if (sentiment < -0.6) return { label: 'FRUSTRATED', color: '#E53935' };
+    if (sentiment < -0.2) return { label: 'CONFUSED', color: '#FF9800' };
+    return { label: 'NEUTRAL', color: '#757575' };
   };
 
   const filteredReflections = reflections.filter(reflection =>
-    reflection.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    reflection.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    reflection.subject.toLowerCase().includes(searchTerm.toLowerCase())
+    (reflection.title?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (reflection.content?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (reflection.subject?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   return (
-    <Box sx={{ maxWidth: '390px', margin: '0 auto', width: '100%' }}>
+    <Box sx={{ pb: 10, width: '100%', bgcolor: '#FAFBFD', minHeight: '100vh' }}>
       {/* Header */}
-      <AppBar position="static" sx={{ backgroundColor: '#FF7043', maxWidth: '390px', margin: '0 auto' }}>
-        <Toolbar sx={{ minHeight: 56, px: 2 }}>
-          <Typography variant="h6" sx={{ flexGrow: 1, fontSize: '18px' }}>
-            My Reflections
+      <AppBar
+        position="sticky"
+        elevation={0}
+        sx={{
+          backgroundColor: 'white',
+          color: 'text.primary',
+          borderBottom: '1px solid rgba(0,0,0,0.05)'
+        }}
+      >
+        <Toolbar sx={{ minHeight: 64, px: 2 }}>
+          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 800 }}>
+            Your Journey
           </Typography>
-          <IconButton
-            color="inherit"
-            onClick={(e) => setFilterAnchor(e.currentTarget)}
-            size="small"
-          >
-            <FilterList />
+          <IconButton size="small" onClick={fetchEntries} sx={{ mr: 1 }}>
+            <Refresh color="primary" />
+          </IconButton>
+          <IconButton size="small" onClick={(e) => setFilterAnchor(e.currentTarget)}>
+            <FilterList color="primary" />
           </IconButton>
         </Toolbar>
       </AppBar>
@@ -125,131 +104,145 @@ const EntriesScreen: React.FC = () => {
       <Box sx={{ p: 2 }}>
         <TextField
           fullWidth
-          placeholder="Search reflections..."
+          placeholder="Find a memory or lesson..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: '16px',
+              bgcolor: 'white',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+            }
+          }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <Search />
+                <Search color="primary" sx={{ opacity: 0.5 }} />
               </InputAdornment>
             ),
           }}
         />
       </Box>
 
-      {/* AI Insights */}
-      <Card sx={{ mx: 2, mb: 2, borderRadius: 3 }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <Psychology sx={{ color: '#FF7043', mr: 1 }} />
-            <Typography variant="h6">
-              AI Insights
+      {/* AI Insights Card (Simplified) */}
+      <Card elevation={0} sx={{
+        mx: 2,
+        mb: 3,
+        borderRadius: '24px',
+        bgcolor: 'rgba(38, 166, 154, 0.1)',
+        border: '1px solid rgba(38, 166, 154, 0.1)'
+      }}>
+        <CardContent sx={{ p: 2.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+            <AutoAwesome sx={{ color: '#26A69A' }} />
+            <Typography variant="subtitle2" fontWeight="800" color="#1B7D73">
+              Weekly Insight
             </Typography>
           </Box>
-          <Alert severity="info" sx={{ mb: 1 }}>
-            Your recent reflections show a focus on visual learning methods. Consider exploring our "Visual Teaching Strategies" training module.
-          </Alert>
-          <Alert severity="warning">
-            Detected some frustration with math concepts. We've grouped similar challenges from other teachers for collaborative solutions.
-          </Alert>
+          <Typography variant="body2" sx={{ color: '#1B7D73', fontWeight: 600, lineHeight: 1.5 }}>
+            Consistently sharing reflections helps your community grow. Every story matters!
+          </Typography>
         </CardContent>
       </Card>
 
-              {/* Reflections List */}
-              <Box sx={{ px: 2, pb: 2 }}>
-        {filteredReflections.map((reflection) => (
-          <Card key={reflection.id} sx={{ mb: 2, borderRadius: 3 }}>
-            <CardContent>
-              {/* Header */}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="h6" gutterBottom>
-                    {reflection.title}
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                    <Chip
-                      size="small"
-                      label={reflection.subject}
-                      color="primary"
-                      variant="outlined"
-                    />
-                    <Chip
-                      size="small"
-                      label={reflection.grade}
-                      variant="outlined"
-                    />
-                    <Chip
-                      size="small"
-                      label={reflection.mood.toLowerCase()}
-                      sx={{
-                        backgroundColor: getMoodColor(reflection.mood),
-                        color: 'white',
-                      }}
-                    />
+      {/* Reflections List */}
+      <Box sx={{ px: 2 }}>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}>
+            <CircularProgress size={30} />
+          </Box>
+        ) : filteredReflections.length > 0 ? (
+          filteredReflections.map((reflection) => {
+            const mood = getMoodFromSentiment(reflection.sentiment);
+            const tags = (reflection.tags || '').split(',').filter(Boolean);
+
+            return (
+              <Card
+                key={reflection.id}
+                elevation={0}
+                onClick={() => navigate(`/entry/${reflection.id}`)}
+                sx={{
+                  mb: 2,
+                  borderRadius: '20px',
+                  border: '1px solid rgba(0,0,0,0.05)',
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s',
+                  '&:active': { transform: 'scale(0.98)' }
+                }}
+              >
+                <CardContent sx={{ p: 2.5 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Chip
+                        size="small"
+                        label={reflection.subject || 'General'}
+                        sx={{ fontWeight: 800, borderRadius: '8px', fontSize: '10px' }}
+                        color="primary"
+                        variant="outlined"
+                      />
+                      <Chip
+                        size="small"
+                        label={reflection.grade || 'Any'}
+                        sx={{ fontWeight: 800, borderRadius: '8px', fontSize: '10px' }}
+                        variant="outlined"
+                      />
+                    </Box>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>
+                      {new Date(reflection.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                    </Typography>
                   </Box>
-                </Box>
-                <IconButton size="small">
-                  <MoreVert />
-                </IconButton>
-              </Box>
 
-              {/* Content Preview */}
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                {reflection.content.substring(0, 120)}...
-              </Typography>
+                  <Typography variant="subtitle1" fontWeight="800" sx={{ mb: 1 }}>
+                    {reflection.title || 'Personal Reflection'}
+                  </Typography>
 
-              {/* Tags */}
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
-                {reflection.tags.map((tag, index) => (
-                  <Chip
-                    key={index}
-                    size="small"
-                    label={tag}
-                    variant="outlined"
-                  />
-                ))}
-              </Box>
+                  <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {reflection.content}
+                  </Typography>
 
-              {/* AI Analysis */}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Chip
-                    size="small"
-                    label={getSentimentLabel(reflection.sentiment).label}
-                    color={getSentimentLabel(reflection.sentiment).color as any}
-                  />
-                  <Chip
-                    size="small"
-                    label={reflection.status.replace('_', ' ')}
-                    color={getStatusColor(reflection.status) as any}
-                  />
-                </Box>
-                <Typography variant="caption" color="text.secondary">
-                  {new Date(reflection.createdAt).toLocaleDateString()}
-                </Typography>
-              </Box>
-
-              {/* AI Suggestions Preview */}
-              {reflection.aiSuggestions.length > 0 && (
-                <Alert severity="info" sx={{ mt: 1 }}>
-                  <strong>AI Suggestion:</strong> {reflection.aiSuggestions[0]}
-                  {reflection.aiSuggestions.length > 1 && ` (+${reflection.aiSuggestions.length - 1} more)`}
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-
-        {filteredReflections.length === 0 && (
-          <Box sx={{ textAlign: 'center', py: 4 }}>
-            <Typography variant="h6" color="text.secondary" gutterBottom>
-              No reflections found
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                      {tags.slice(0, 2).map((tag: string, i: number) => (
+                        <Typography key={i} variant="caption" sx={{ fontWeight: 800, color: 'primary.main', bgcolor: 'primary.lighter', px: 1, borderRadius: '6px' }}>
+                          #{tag.trim()}
+                        </Typography>
+                      ))}
+                    </Box>
+                    <Box sx={{
+                      bgcolor: `${mood.color}15`,
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1
+                    }}>
+                      <Typography variant="caption" sx={{ fontWeight: 800, color: mood.color, fontSize: '10px' }}>
+                        {mood.label}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            );
+          })
+        ) : (
+          <Box sx={{ textAlign: 'center', py: 10 }}>
+            <Typography variant="h6" color="text.secondary" gutterBottom sx={{ fontWeight: 800 }}>
+              Your space is waiting
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {searchTerm ? 'Try adjusting your search terms' : 'Start by creating your first reflection'}
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              {searchTerm ? "We couldn't find that memory." : "Start writing your first story today."}
             </Typography>
+            {!searchTerm && (
+              <Button
+                variant="contained"
+                onClick={() => navigate('/create-entry')}
+                sx={{ borderRadius: '12px', fontWeight: 800, px: 4 }}
+              >
+                Start Reflection
+              </Button>
+            )}
           </Box>
         )}
       </Box>
@@ -259,28 +252,33 @@ const EntriesScreen: React.FC = () => {
         anchorEl={filterAnchor}
         open={Boolean(filterAnchor)}
         onClose={() => setFilterAnchor(null)}
+        PaperProps={{ sx: { borderRadius: '16px', mt: 1 } }}
       >
         <MenuItem onClick={() => setFilterAnchor(null)}>All Subjects</MenuItem>
-        <MenuItem onClick={() => setFilterAnchor(null)}>Mathematics</MenuItem>
-        <MenuItem onClick={() => setFilterAnchor(null)}>Science</MenuItem>
-        <MenuItem onClick={() => setFilterAnchor(null)}>English</MenuItem>
-        <MenuItem onClick={() => setFilterAnchor(null)}>This Week</MenuItem>
-        <MenuItem onClick={() => setFilterAnchor(null)}>This Month</MenuItem>
+        <Divider />
+        <MenuItem onClick={() => setFilterAnchor(null)}>Earlier This Week</MenuItem>
+        <MenuItem onClick={() => setFilterAnchor(null)}>Earlier This Month</MenuItem>
       </Menu>
 
       {/* Floating Action Button */}
       <Fab
         color="primary"
+        variant="extended"
         sx={{
           position: 'fixed',
-          bottom: 90,
-          right: 16,
-          backgroundColor: '#FF7043',
-          '&:hover': { backgroundColor: '#E64A19' },
+          bottom: 32,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          borderRadius: '20px',
+          fontWeight: 800,
+          textTransform: 'none',
+          px: 4,
+          boxShadow: '0 8px 32px rgba(255, 112, 67, 0.3)',
         }}
         onClick={() => navigate('/create-entry')}
       >
-        <Add />
+        <HistoryEdu sx={{ mr: 1 }} />
+        Tell a Story
       </Fab>
     </Box>
   );

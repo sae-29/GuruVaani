@@ -1,89 +1,134 @@
+/**
+ * Authentication Routes
+ * Handles user registration, login, and session management
+ */
+
 import express from 'express';
 import { asyncHandler } from '../middleware/errorHandler';
+import { authenticate } from '../middleware/auth';
+import { authService } from '../services/authService';
 import { logger } from '../utils/logger';
 
 const router = express.Router();
 
-// POST /api/auth/login
-router.post('/login', asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
-  
-  logger.info('Login attempt', { email });
-  
-  // Mock authentication - replace with real auth logic
-  if (email === 'admin@guruvaani.edu.in' && password === 'admin123') {
-    const user = {
-      id: '1',
-      name: 'Admin User',
-      email: 'admin@guruvaani.edu.in',
-      role: 'ADMIN',
-      permissions: ['read', 'write', 'admin'],
-    };
-    
-    const token = 'mock-jwt-token'; // Replace with real JWT generation
-    
-    res.json({
-      success: true,
-      data: {
-        user,
-        token,
-      },
-    });
-  } else {
-    res.status(401).json({
+/**
+ * POST /api/auth/register
+ * Register a new user (Teacher by default)
+ */
+router.post('/register', asyncHandler(async (req, res) => {
+  const { email, password, firstName, lastName, subjects, grades, schoolName } = req.body;
+
+  // Validate required fields
+  if (!email || !password || !firstName || !lastName) {
+    return res.status(400).json({
       success: false,
-      error: {
-        message: 'Invalid credentials',
-      },
+      error: 'Email, password, first name, and last name are required',
     });
   }
-}));
 
-// POST /api/auth/register
-router.post('/register', asyncHandler(async (req, res) => {
-  const { name, email, password, school, subjects, grades } = req.body;
-  
-  logger.info('Registration attempt', { email, school });
-  
-  // Mock registration - replace with real logic
-  const user = {
-    id: Date.now().toString(),
-    name,
+  // Password strength check
+  if (password.length < 6) {
+    return res.status(400).json({
+      success: false,
+      error: 'Password must be at least 6 characters',
+    });
+  }
+
+  const result = await authService.register({
     email,
-    school,
+    password,
+    firstName,
+    lastName,
     subjects,
     grades,
-    role: 'TEACHER',
-    isActive: true,
-    createdAt: new Date().toISOString(),
-  };
-  
+    schoolName,
+  });
+
+  if (!result.success) {
+    return res.status(400).json({
+      success: false,
+      error: result.error,
+    });
+  }
+
+  logger.info('User registered', { email });
+
   res.status(201).json({
     success: true,
     data: {
-      user,
-      message: 'Registration successful',
+      user: result.user,
+      token: result.token,
     },
   });
 }));
 
-// POST /api/auth/refresh
-router.post('/refresh', asyncHandler(async (req, res) => {
-  const { refreshToken } = req.body;
-  
-  // Mock token refresh - replace with real logic
+/**
+ * POST /api/auth/login
+ * Authenticate user and return JWT token
+ */
+router.post('/login', asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({
+      success: false,
+      error: 'Email and password are required',
+    });
+  }
+
+  const result = await authService.login(email, password);
+
+  if (!result.success) {
+    return res.status(401).json({
+      success: false,
+      error: result.error,
+    });
+  }
+
+  logger.info('User logged in', { email });
+
   res.json({
     success: true,
     data: {
-      token: 'new-mock-jwt-token',
-      refreshToken: 'new-mock-refresh-token',
+      user: result.user,
+      token: result.token,
     },
   });
 }));
 
-// POST /api/auth/logout
+/**
+ * GET /api/auth/me
+ * Get current authenticated user
+ */
+router.get('/me', authenticate, asyncHandler(async (req, res) => {
+  const userId = req.user!.id;
+
+  const user = await authService.getUserById(userId);
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      error: 'User not found',
+    });
+  }
+
+  res.json({
+    success: true,
+    data: {
+      ...user,
+      subjects: user.subjects?.split(',').filter(Boolean) || [],
+      grades: user.grades?.split(',').filter(Boolean) || [],
+    },
+  });
+}));
+
+/**
+ * POST /api/auth/logout
+ * Logout user (client-side token removal)
+ */
 router.post('/logout', asyncHandler(async (req, res) => {
-  // Mock logout - replace with real logic
+  // In a stateless JWT system, logout is handled client-side
+  // This endpoint exists for API consistency
   res.json({
     success: true,
     message: 'Logged out successfully',

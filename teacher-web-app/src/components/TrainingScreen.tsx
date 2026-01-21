@@ -12,16 +12,17 @@ import {
   InputAdornment,
   LinearProgress,
   Rating,
-  Alert,
+  IconButton,
 } from '@mui/material';
 import {
   Search,
   PlayArrow,
   Bookmark,
   BookmarkBorder,
+  AutoAwesome,
+  Lightbulb,
   Star,
-  TrendingUp,
-  Psychology,
+  EmojiEvents,
 } from '@mui/icons-material';
 
 const TrainingScreen: React.FC = () => {
@@ -75,23 +76,23 @@ const TrainingScreen: React.FC = () => {
     },
   ];
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'BEGINNER': return '#4CAF50';
-      case 'INTERMEDIATE': return '#FF9800';
-      case 'ADVANCED': return '#E53935';
-      default: return '#757575';
-    }
-  };
-
   return (
-    <Box>
+    <Box sx={{ pb: 4, width: '100%', bgcolor: '#FAFAFA', minHeight: '100vh' }}>
       {/* Header */}
-      <AppBar position="static" sx={{ backgroundColor: '#26A69A', minHeight: 64 }}>
-        <Toolbar sx={{ minHeight: 64 }}>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Learning & Training
+      <AppBar
+        position="sticky"
+        elevation={0}
+        sx={{
+          backgroundColor: 'white',
+          color: 'text.primary',
+          borderBottom: '1px solid rgba(0,0,0,0.05)'
+        }}
+      >
+        <Toolbar sx={{ minHeight: 64, px: 2 }}>
+          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 800 }}>
+            Learn & Grow
           </Typography>
+          <EmojiEvents color="secondary" />
         </Toolbar>
       </AppBar>
 
@@ -99,116 +100,147 @@ const TrainingScreen: React.FC = () => {
       <Box sx={{ p: 2 }}>
         <TextField
           fullWidth
-          placeholder="Search training modules..."
+          placeholder="What do you want to learn today?"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: '16px',
+              bgcolor: 'white',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+            }
+          }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <Search />
+                <Search color="secondary" sx={{ opacity: 0.5 }} />
               </InputAdornment>
             ),
           }}
         />
       </Box>
 
-      {/* Tabs */}
-      <Box sx={{ px: 2, mb: 2 }}>
-        <Box sx={{ display: 'flex', gap: 1 }}>
+      {/* Custom Tabs */}
+      <Box sx={{ px: 2, mb: 3 }}>
+        <Box sx={{
+          display: 'flex',
+          p: 0.5,
+          bgcolor: 'rgba(0,0,0,0.04)',
+          borderRadius: '16px',
+          gap: 0.5
+        }}>
           <Button
-            variant={activeTab === 'recommended' ? 'contained' : 'outlined'}
+            fullWidth
             onClick={() => setActiveTab('recommended')}
-            startIcon={<Psychology />}
+            sx={{
+              borderRadius: '12px',
+              textTransform: 'none',
+              fontWeight: 800,
+              bgcolor: activeTab === 'recommended' ? 'white' : 'transparent',
+              color: activeTab === 'recommended' ? 'secondary.main' : 'text.secondary',
+              boxShadow: activeTab === 'recommended' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
+              '&:hover': { bgcolor: activeTab === 'recommended' ? 'white' : 'rgba(0,0,0,0.02)' }
+            }}
           >
-            AI Recommended
+            Recommended
           </Button>
           <Button
-            variant={activeTab === 'my-trainings' ? 'contained' : 'outlined'}
+            fullWidth
             onClick={() => setActiveTab('my-trainings')}
+            sx={{
+              borderRadius: '12px',
+              textTransform: 'none',
+              fontWeight: 800,
+              bgcolor: activeTab === 'my-trainings' ? 'white' : 'transparent',
+              color: activeTab === 'my-trainings' ? 'secondary.main' : 'text.secondary',
+              boxShadow: activeTab === 'my-trainings' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
+              '&:hover': { bgcolor: activeTab === 'my-trainings' ? 'white' : 'rgba(0,0,0,0.02)' }
+            }}
           >
-            My Trainings
+            My Modules
           </Button>
         </Box>
       </Box>
 
-              <Box sx={{ px: 2, pb: 2 }}>
+      <Box sx={{ px: 2, pb: 2 }}>
         {activeTab === 'recommended' && (
           <>
-            {/* AI Recommendations Header */}
-            <Alert severity="info" sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <TrendingUp sx={{ mr: 1 }} />
-                <Typography variant="body2">
-                  Personalized recommendations based on your recent reflections and teaching challenges
+            <Box sx={{ px: 1, mb: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                <AutoAwesome sx={{ color: 'secondary.main', fontSize: 20 }} />
+                <Typography variant="subtitle2" fontWeight="800" color="secondary.main">
+                  PERSONALIZED FOR YOU
                 </Typography>
               </Box>
-            </Alert>
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+                Based on your classroom stories and professional goals.
+              </Typography>
+            </Box>
 
             {/* Recommended Trainings */}
             {recommendations.map((training) => (
-              <Card key={training.id} sx={{ mb: 2, borderRadius: 3 }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                    <Typography variant="h6" sx={{ flex: 1 }}>
-                      {training.title}
-                    </Typography>
-                    <Button
-                      size="small"
-                      startIcon={training.isBookmarked ? <Bookmark /> : <BookmarkBorder />}
-                      sx={{ minWidth: 'auto', p: 1 }}
-                    >
-                    </Button>
+              <Card key={training.id} elevation={0} sx={{
+                mb: 2.5,
+                borderRadius: '24px',
+                border: '1px solid rgba(0,0,0,0.05)',
+                overflow: 'hidden'
+              }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="h6" fontWeight="800" gutterBottom>
+                        {training.title}
+                      </Typography>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Chip size="small" label={`${training.duration} min`} sx={{ fontWeight: 700, borderRadius: '8px' }} color="secondary" variant="outlined" />
+                        <Chip size="small" label={training.difficulty.toLowerCase()} sx={{ fontWeight: 700, borderRadius: '8px' }} variant="outlined" />
+                      </Box>
+                    </Box>
+                    <IconButton size="small" sx={{ bgcolor: 'grey.50' }}>
+                      {training.isBookmarked ? <Bookmark color="secondary" /> : <BookmarkBorder />}
+                    </IconButton>
                   </Box>
 
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3, lineHeight: 1.5, fontWeight: 500 }}>
                     {training.description}
                   </Typography>
 
-                  <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                    <Chip
-                      size="small"
-                      label={training.difficulty}
-                      sx={{
-                        backgroundColor: getDifficultyColor(training.difficulty),
-                        color: 'white',
-                      }}
-                    />
-                    <Chip
-                      size="small"
-                      label={`${training.duration} min`}
-                      variant="outlined"
-                    />
-                    <Chip
-                      size="small"
-                      label={`${Math.round(training.relevanceScore * 100)}% match`}
-                      color="primary"
-                    />
+                  <Box sx={{
+                    bgcolor: 'secondary.light',
+                    p: 2,
+                    borderRadius: '16px',
+                    mb: 3,
+                    border: '1px dashed',
+                    borderColor: 'secondary.main'
+                  }}>
+                    <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
+                      <Lightbulb sx={{ color: 'secondary.main', fontSize: 20, mt: 0.3 }} />
+                      <Box>
+                        <Typography variant="caption" sx={{ fontWeight: 800, color: 'secondary.dark', display: 'block', mb: 0.5 }}>
+                          REASONING BY GURU VAANI AI
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: 'secondary.dark', fontWeight: 600 }}>
+                          {training.reasoning}
+                        </Typography>
+                      </Box>
+                    </Box>
                   </Box>
-
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Rating value={training.rating} precision={0.1} size="small" readOnly />
-                    <Typography variant="caption" sx={{ ml: 1 }}>
-                      {training.rating} ({training.totalRatings} reviews)
-                    </Typography>
-                  </Box>
-
-                  <Alert severity="success" sx={{ mb: 2 }}>
-                    <Typography variant="caption">
-                      <strong>Why recommended:</strong> {training.reasoning}
-                    </Typography>
-                  </Alert>
 
                   <Button
                     variant="contained"
                     fullWidth
+                    disableElevation
                     startIcon={<PlayArrow />}
                     sx={{
-                      backgroundColor: '#26A69A',
-                      '&:hover': { backgroundColor: '#00897B' },
+                      py: 2,
+                      borderRadius: '16px',
+                      fontWeight: 800,
+                      bgcolor: 'secondary.main',
+                      textTransform: 'none',
+                      fontSize: '1rem'
                     }}
                   >
-                    Start Training
+                    Start Module
                   </Button>
                 </CardContent>
               </Card>

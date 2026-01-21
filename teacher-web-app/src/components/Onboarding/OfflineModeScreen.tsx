@@ -12,11 +12,12 @@ import {
   ListItemText,
 } from '@mui/material';
 import {
-  PhoneAndroid,
   CloudSync,
   EditNote,
   Download,
+  WifiOff,
 } from '@mui/icons-material';
+import { designTokens } from 'guru-vaani-shared';
 
 const OfflineModeScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -27,31 +28,31 @@ const OfflineModeScreen: React.FC = () => {
 
   const features = [
     {
-      icon: <EditNote sx={{ fontSize: 32, color: '#FF7043' }} />,
-      title: 'Save entries offline',
-      description: 'Write reflections even without internet',
+      icon: <EditNote sx={{ fontSize: 32, color: designTokens.colors.primary.main }} />,
+      title: 'Write from your heart',
+      description: 'Your diary works even in the heart of the forest, without signal.',
     },
     {
-      icon: <CloudSync sx={{ fontSize: 32, color: '#26A69A' }} />,
-      title: 'Syncs when connected',
-      description: 'Your data automatically syncs when online',
+      icon: <CloudSync sx={{ fontSize: 32, color: designTokens.colors.secondary.main }} />,
+      title: 'Smart Sync',
+      description: 'Once you step into the world of internet, we’ll whisk your stories to us safely.',
     },
     {
-      icon: <Download sx={{ fontSize: 32, color: '#5C6BC0' }} />,
-      title: 'Download trainings for later',
-      description: 'Access learning modules anytime, anywhere',
+      icon: <Download sx={{ fontSize: 32, color: designTokens.colors.info.main }} />,
+      title: 'Deep Learning',
+      description: 'Download training modules and learn at your own pace, offline.',
     },
   ];
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Box sx={{ textAlign: 'center', mb: 4 }}>
+    <Container maxWidth="md" sx={{ py: 6 }}>
+      <Box sx={{ textAlign: 'center', mb: 6 }}>
         <Box
           sx={{
-            width: 200,
-            height: 200,
-            borderRadius: '50%',
-            backgroundColor: '#FF704320',
+            width: 140,
+            height: 140,
+            borderRadius: '16px', // Squircle for visual uniqueness
+            backgroundColor: `${designTokens.colors.primary.main}12`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -59,31 +60,44 @@ const OfflineModeScreen: React.FC = () => {
             position: 'relative',
           }}
         >
-          <PhoneAndroid sx={{ fontSize: 80, color: '#FF7043' }} />
+          <WifiOff sx={{ fontSize: 60, color: designTokens.colors.primary.main }} />
           <CloudSync
             sx={{
-              fontSize: 40,
-              color: '#26A69A',
+              fontSize: 32,
+              color: designTokens.colors.secondary.main,
               position: 'absolute',
-              top: 20,
-              right: 20,
+              bottom: -10,
+              right: -10,
+              p: 1,
+              bgcolor: 'white',
+              borderRadius: '50%',
+              boxShadow: 2
             }}
           />
         </Box>
-        <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
-          Use Guru Vaani Anywhere
+        <Typography variant="h2" fontWeight="800" sx={{ mb: 1 }}>
+          No signal? No worry.
+        </Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ fontWeight: 500 }}>
+          Guru Vaani is your companion, always and everywhere.
         </Typography>
       </Box>
 
-      <List sx={{ mb: 4 }}>
+      <List sx={{ mb: 6 }}>
         {features.map((feature, index) => (
-          <Card key={index} sx={{ mb: 2 }}>
-            <ListItem>
-              <ListItemIcon>{feature.icon}</ListItemIcon>
+          <Card key={index} elevation={0} sx={{
+            mb: 2.5,
+            borderRadius: '16px',
+            border: '1px solid rgba(0,0,0,0.05)',
+            bgcolor: 'white'
+          }}>
+            <ListItem sx={{ py: 2 }}>
+              <ListItemIcon sx={{ mr: 1 }}>{feature.icon}</ListItemIcon>
               <ListItemText
                 primary={feature.title}
                 secondary={feature.description}
-                primaryTypographyProps={{ fontWeight: 600 }}
+                primaryTypographyProps={{ fontWeight: 800, fontSize: '1.1rem' }}
+                secondaryTypographyProps={{ fontWeight: 500 }}
               />
             </ListItem>
           </Card>
@@ -94,15 +108,18 @@ const OfflineModeScreen: React.FC = () => {
         <Button
           variant="contained"
           size="large"
+          disableElevation
           onClick={handleContinue}
           sx={{
-            minWidth: 200,
-            py: 1.5,
-            backgroundColor: '#FF7043',
-            '&:hover': { backgroundColor: '#FF5722' },
+            minWidth: 260,
+            py: 2,
+            borderRadius: '16px',
+            fontWeight: 800,
+            fontSize: '1.1rem',
+            textTransform: 'none'
           }}
         >
-          I Understand
+          Sounds good! ✨
         </Button>
       </Box>
     </Container>

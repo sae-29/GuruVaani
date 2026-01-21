@@ -15,7 +15,9 @@ import analyticsRoutes from './routes/analytics';
 import entryRoutes from './routes/entries';
 import moduleRoutes from './routes/modules';
 import feedbackRoutes from './routes/feedback';
+import settingsRoutes from './routes/settings';
 import { initializeRedis } from './config/redis';
+import { configService } from './services/configService';
 
 // Load environment variables
 dotenv.config();
@@ -27,14 +29,23 @@ const PORT = process.env.PORT || 3000;
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 1000, // Increased for development/testing
   message: 'Too many requests from this IP, please try again later.',
 });
 
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:3003',
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:3002',
+    'http://localhost:3003',
+    'http://localhost:3004',
+    'http://localhost:3006',
+    'http://localhost:5173',
+  ],
   credentials: true,
 }));
 app.use(compression());
@@ -66,6 +77,7 @@ app.use('/api/entries', entryRoutes);
 app.use('/api/modules', moduleRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -92,10 +104,18 @@ process.on('SIGINT', async () => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   logger.info(`🚀 Guru Vaani API Server running on port ${PORT}`);
   logger.info(`📚 Environment: ${process.env.NODE_ENV || 'development'}`);
   logger.info(`🔗 Health check: http://localhost:${PORT}/health`);
+
+  // Initialize defaults
+  try {
+    await configService.initializeDefaults();
+    logger.info('Default system configurations initialized');
+  } catch (error) {
+    logger.error('Failed to initialize default configurations', error);
+  }
 });
 
 export default app;

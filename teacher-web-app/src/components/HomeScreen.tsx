@@ -3,23 +3,27 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
+  Button,
   Card,
   CardContent,
-  Button,
-  Grid,
   LinearProgress,
+  Alert,
+  Grid,
   IconButton,
   Badge,
-  Alert,
 } from '@mui/material';
 import {
-  Add,
-  Notifications,
+  AutoAwesome,
   School,
-  People,
-  LocalFireDepartment,
   TrendingUp,
+  Notifications,
+  LocalFireDepartment,
+  People,
+  EmojiEvents,
 } from '@mui/icons-material';
+import { designTokens } from 'guru-vaani-shared';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 interface HomeScreenProps {
   user: any;
@@ -28,30 +32,42 @@ interface HomeScreenProps {
 const HomeScreen: React.FC<HomeScreenProps> = ({ user }) => {
   const navigate = useNavigate();
   const [syncStatus] = useState<'synced' | 'syncing' | 'offline'>('synced');
+  const [userStats, setUserStats] = useState<any>(null);
 
-  // Mock data
-  const stats = {
-    totalReflections: 47,
-    weeklyReflections: 3,
-    completedTrainings: 12,
-    streakDays: 15,
-    nepHours: 24.5,
-  };
+  React.useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE}/auth/me`, {
+          headers: {
+            ...(token && { 'Authorization': `Bearer ${token}` })
+          }
+        });
+        const result = await response.json();
+        if (result.success) {
+          setUserStats(result.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch stats', error);
+      }
+    };
+    fetchStats();
+  }, []);
 
   const recentActivities = [
     {
       id: '1',
       type: 'entry',
       title: 'Math Division - Class 4',
-      subtitle: 'AI suggested: Visual Learning Aids',
-      timestamp: 'Yesterday',
-      mood: 'frustrated',
+      subtitle: 'Added visual aids approach',
+      timestamp: 'Today',
+      mood: 'happy',
     },
     {
       id: '2',
       type: 'training',
-      title: 'Classroom Management',
-      subtitle: 'Completed • Rated 5 stars',
+      title: 'Completed: Visual Learning',
+      subtitle: '45 mins module',
       timestamp: '2 days ago',
       mood: 'happy',
     },
@@ -86,139 +102,120 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ user }) => {
   };
 
   return (
-    <Box sx={{ pb: 2, maxWidth: '390px', margin: '0 auto', width: '100%' }}>
+    <Box sx={{ pb: 4, width: '100%' }}>
       {/* Header */}
       <Box
         sx={{
-          background: 'linear-gradient(135deg, #FF7043 0%, #26A69A 100%)',
+          background: `linear-gradient(135deg, ${designTokens.colors.primary.main} 0%, ${designTokens.colors.secondary.main} 100%)`,
           color: 'white',
-          p: 2.5,
-          borderRadius: '0 0 20px 20px',
-          mx: 0,
+          p: 3,
+          borderRadius: '0 0 32px 32px',
+          boxShadow: '0 8px 32px rgba(255, 112, 67, 0.15)',
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Box>
-            <Typography variant="h5" fontWeight="bold">
-              Namaste, {user?.name?.split(' ')[0] || 'Teacher'} 🙏
+            <Typography variant="h4" fontWeight="800">
+              Namaste, {user?.firstName || user?.name?.split(' ')[0] || 'Teacher'} 🙏
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-              <Box
-                sx={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  backgroundColor: getSyncStatusInfo().color === 'success' ? '#4CAF50' : '#FFA726',
-                  mr: 1,
-                }}
-              />
-              <Typography variant="caption" sx={{ opacity: 0.9 }}>
-                {getSyncStatusInfo().text}
-              </Typography>
-            </Box>
+            <Typography variant="body2" sx={{ opacity: 0.9, fontWeight: 500 }}>
+              {getSyncStatusInfo().text}
+            </Typography>
           </Box>
-          <IconButton sx={{ color: 'white' }}>
-            <Badge badgeContent={3} color="error">
+          <IconButton sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}>
+            <Badge badgeContent={3} color="error" variant="dot">
               <Notifications />
             </Badge>
           </IconButton>
         </Box>
 
-        {/* Streak Card */}
-        <Card sx={{ backgroundColor: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)', borderRadius: 3 }}>
-          <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <LocalFireDepartment sx={{ color: '#FFD700', mr: 1 }} />
-                <Box>
-                  <Typography variant="h4" fontWeight="bold" sx={{ color: 'white' }}>
-                    {stats.streakDays}
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)' }}>
-                    Day Streak!
-                  </Typography>
-                </Box>
-              </Box>
-              <Box sx={{ flex: 1, ml: 3 }}>
-                <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
-                  NEP Hours: {stats.nepHours}/50
-                </Typography>
-                <LinearProgress
-                  variant="determinate"
-                  value={(stats.nepHours / 50) * 100}
-                  sx={{
-                    backgroundColor: 'rgba(255,255,255,0.3)',
-                    '& .MuiLinearProgress-bar': {
-                      backgroundColor: '#FFD700',
-                    },
-                  }}
-                />
-              </Box>
+        {/* Streak & NEP Progress */}
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <Box sx={{
+            bgcolor: 'rgba(255,255,255,0.2)',
+            p: 1.5,
+            borderRadius: '16px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            minWidth: 80
+          }}>
+            <LocalFireDepartment sx={{ color: '#FFD700', fontSize: 32 }} />
+            <Typography variant="h5" fontWeight="900">{userStats?.streakDays || 0}</Typography>
+            <Typography variant="caption" sx={{ fontWeight: 600 }}>Days</Typography>
+          </Box>
+
+          <Box sx={{ flex: 1 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase' }}>
+                NEP Growth Progress
+              </Typography>
+              <Typography variant="caption" sx={{ fontWeight: 700 }}>
+                {userStats?.nepHours || 0}/50 h
+              </Typography>
             </Box>
-          </CardContent>
-        </Card>
+            <LinearProgress
+              variant="determinate"
+              value={((userStats?.nepHours || 0) / 50) * 100}
+              sx={{
+                height: 8,
+                borderRadius: 4,
+                bgcolor: 'rgba(255,255,255,0.2)',
+                '& .MuiLinearProgress-bar': {
+                  bgcolor: 'white',
+                  borderRadius: 4
+                }
+              }}
+            />
+          </Box>
+        </Box>
       </Box>
 
-              {/* Quick Stats - 2x2 Grid for Mobile */}
-              <Grid container spacing={1.5} sx={{ px: 2, mt: 2 }}>
-                <Grid item xs={6}>
-                  <Card sx={{ textAlign: 'center', p: 2, borderRadius: 3, minHeight: 80 }}>
-                    <Typography variant="h5" color="primary" fontWeight="bold">
-                      {stats.totalReflections}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                      Reflections
-                    </Typography>
-                  </Card>
-                </Grid>
-                <Grid item xs={6}>
-                  <Card sx={{ textAlign: 'center', p: 2, borderRadius: 3, minHeight: 80 }}>
-                    <Typography variant="h5" color="secondary" fontWeight="bold">
-                      {stats.completedTrainings}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                      Trainings
-                    </Typography>
-                  </Card>
-                </Grid>
-                <Grid item xs={6}>
-                  <Card sx={{ textAlign: 'center', p: 2, borderRadius: 3, minHeight: 80 }}>
-                    <Typography variant="h5" sx={{ color: '#FFD700' }} fontWeight="bold">
-                      3
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                      Badges
-                    </Typography>
-                  </Card>
-                </Grid>
-                <Grid item xs={6}>
-                  <Card sx={{ textAlign: 'center', p: 2, borderRadius: 3, minHeight: 80 }}>
-                    <Typography variant="h5" sx={{ color: '#FF7043' }} fontWeight="bold">
-                      {stats.streakDays}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                      Day Streak
-                    </Typography>
-                  </Card>
-                </Grid>
-              </Grid>
+      {/* Quick Stats */}
+      <Grid container spacing={2} sx={{ px: 2, mt: -3 }}>
+        <Grid item xs={4}>
+          <Card elevation={0} sx={{ textAlign: 'center', p: 2, borderRadius: '20px', border: '1px solid rgba(0,0,0,0.05)' }}>
+            <AutoAwesome sx={{ color: '#FF7043', fontSize: 28, mb: 0.5 }} />
+            <Typography variant="h6" fontWeight="800">{userStats?.totalReflections || 0}</Typography>
+            <Typography variant="caption" color="text.secondary" fontWeight="700">Reflections</Typography>
+          </Card>
+        </Grid>
+        <Grid item xs={4}>
+          <Card elevation={0} sx={{ textAlign: 'center', p: 2, borderRadius: '20px', border: '1px solid rgba(0,0,0,0.05)' }}>
+            <School sx={{ color: '#26A69A', fontSize: 28, mb: 0.5 }} />
+            <Typography variant="h6" fontWeight="800">{userStats?.completedTrainings || 0}</Typography>
+            <Typography variant="caption" color="text.secondary" fontWeight="700">Trainings</Typography>
+          </Card>
+        </Grid>
+        <Grid item xs={4}>
+          <Card elevation={0} sx={{ textAlign: 'center', p: 2, borderRadius: '20px', border: '1px solid rgba(0,0,0,0.05)' }}>
+            <TrendingUp sx={{ color: '#FB8C00', fontSize: 28, mb: 0.5 }} />
+            <Typography variant="h6" fontWeight="800">{userStats?.streakDays || 0}d</Typography>
+            <Typography variant="caption" color="text.secondary" fontWeight="700">Streak</Typography>
+          </Card>
+        </Grid>
+      </Grid>
 
       {/* Primary Actions */}
-      <Box sx={{ px: 2, mt: 3 }}>
+      <Box sx={{ px: 2, mt: 4 }}>
         <Button
           variant="contained"
           size="large"
           fullWidth
-          startIcon={<Add />}
+          disableElevation
+          startIcon={<AutoAwesome />}
           onClick={() => navigate('/create-entry')}
           sx={{
             mb: 2,
-            py: 1.5,
-            backgroundColor: '#FF7043',
-            '&:hover': { backgroundColor: '#E64A19' },
+            py: 2,
+            borderRadius: '16px',
+            fontSize: '1.2rem',
+            fontWeight: 800,
+            textTransform: 'none',
+            boxShadow: '0 8px 16px rgba(255, 112, 67, 0.2)'
           }}
         >
-          New Reflection Entry
+          Share a Story 🎙️
         </Button>
 
         <Grid container spacing={1}>
@@ -267,46 +264,45 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ user }) => {
       </Card>
 
       {/* Recent Activity */}
-      <Card sx={{ mx: 2, mt: 2, borderRadius: 3 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Recent Activity
-          </Typography>
-          {recentActivities.map((activity) => (
-            <Box
-              key={activity.id}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                py: 1.5,
-                borderBottom: '1px solid #f0f0f0',
-                '&:last-child': { borderBottom: 'none' },
-              }}
-            >
-              <Box
-                sx={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  backgroundColor: getMoodColor(activity.mood),
-                  mr: 2,
-                }}
-              />
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="body2" fontWeight="medium">
-                  {activity.title}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {activity.subtitle}
+      <Box sx={{ px: 2, mt: 4 }}>
+        <Typography variant="h6" fontWeight="800" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+          Recent Activity <TrendingUp color="primary" />
+        </Typography>
+        {recentActivities.map((activity) => (
+          <Card key={activity.id} elevation={0} sx={{
+            mb: 1.5,
+            borderRadius: '16px',
+            border: '1px solid rgba(0,0,0,0.05)',
+            transition: 'transform 0.2s',
+            '&:hover': { transform: 'scale(1.02)' }
+          }}>
+            <CardContent sx={{ p: '16px !important' }}>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <Box sx={{
+                  bgcolor: `${getMoodColor(activity.mood)}15`,
+                  p: 1.2,
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}>
+                  {activity.type === 'entry' && <AutoAwesome sx={{ color: getMoodColor(activity.mood) }} />}
+                  {activity.type === 'training' && <School sx={{ color: getMoodColor(activity.mood) }} />}
+                  {activity.type === 'badge' && <EmojiEvents sx={{ color: getMoodColor(activity.mood) }} />}
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="body1" fontWeight="800">{activity.title}</Typography>
+                  <Typography variant="caption" color="text.secondary" fontWeight="600">
+                    {activity.subtitle}
+                  </Typography>
+                </Box>
+                <Typography variant="caption" color="text.secondary" fontWeight="600">
+                  {activity.timestamp}
                 </Typography>
               </Box>
-              <Typography variant="caption" color="text.secondary">
-                {activity.timestamp}
-              </Typography>
-            </Box>
-          ))}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        ))}
+      </Box>
     </Box>
   );
 };

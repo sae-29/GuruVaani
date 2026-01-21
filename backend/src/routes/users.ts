@@ -1,142 +1,215 @@
+/**
+ * Users Routes
+ * User profile and stats endpoints
+ */
+
 import express from 'express';
 import { asyncHandler } from '../middleware/errorHandler';
-import { logger } from '../utils/logger';
+import { authenticate, requireRole } from '../middleware/auth';
+import { PrismaClient } from '@prisma/client';
 
 const router = express.Router();
+const prisma = new PrismaClient();
 
-// GET /api/users - Get all users (admin only)
-router.get('/', asyncHandler(async (req, res) => {
-  logger.info('Fetching users list');
-  
-  // Mock users data
-  const users = [
-    {
-      id: '1',
-      name: 'Radha Sharma',
-      email: 'radha.sharma@school.edu.in',
-      school: 'Government Primary School, Sector 15',
-      subjects: ['Mathematics', 'Science'],
-      grades: ['Class 3', 'Class 4'],
-      isActive: true,
-      lastActive: new Date().toISOString(),
-      totalReflections: 47,
-      avgSentiment: 0.2,
-      createdAt: '2024-01-01T00:00:00Z',
-    },
-    {
-      id: '2',
-      name: 'Amit Kumar',
-      email: 'amit.kumar@school.edu.in',
-      school: 'Delhi Public School',
-      subjects: ['Science', 'English'],
-      grades: ['Class 4', 'Class 5'],
-      isActive: true,
-      lastActive: new Date().toISOString(),
-      totalReflections: 32,
-      avgSentiment: 0.5,
-      createdAt: '2024-01-02T00:00:00Z',
-    },
-  ];
-  
-  res.json({
-    success: true,
-    data: {
-      users,
-      total: users.length,
-    },
-  });
+/**
+ * GET /api/users/me
+ * Get current user profile and stats
+ */
+router.get('/me', authenticate, asyncHandler(async (req, res) => {
+    const userId = req.user!.id;
+
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            subjects: true,
+            grades: true,
+            totalReflections: true,
+            completedTrainings: true,
+            streakDays: true,
+            nepHours: true,
+            school: {
+                select: { name: true, district: true },
+            },
+        },
+    });
+
+    if (!user) {
+        res.status(404).json({
+            success: false,
+            error: 'User not found',
+        });
+        return;
+    }
+
+    res.json({
+        success: true,
+        data: {
+            ...user,
+            subjects: user.subjects?.split(',').filter(Boolean) || [],
+            grades: user.grades?.split(',').filter(Boolean) || [],
+        },
+    });
 }));
 
-// GET /api/users/:id - Get user by ID
-router.get('/:id', asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  
-  logger.info('Fetching user', { userId: id });
-  
-  // Mock user data
-  const user = {
-    id,
-    name: 'Radha Sharma',
-    email: 'radha.sharma@school.edu.in',
-    phone: '+91 98765 43210',
-    school: 'Government Primary School, Sector 15',
-    subjects: ['Mathematics', 'Science'],
-    grades: ['Class 3', 'Class 4'],
-    experience: 8,
-    qualification: 'B.Ed, M.A. Mathematics',
-    isActive: true,
-    lastActive: new Date().toISOString(),
-    totalReflections: 47,
-    weeklyReflections: 3,
-    avgSentiment: 0.2,
-    completedTrainings: 12,
-    engagementScore: 85,
-    createdAt: '2024-01-01T00:00:00Z',
-  };
-  
-  res.json({
-    success: true,
-    data: user,
-  });
+/**
+ * PUT /api/users/me
+ * Update current user profile
+ */
+router.put('/me', authenticate, asyncHandler(async (req, res) => {
+    const userId = req.user!.id;
+    const { firstName, lastName, subjects, grades } = req.body;
+
+    const user = await prisma.user.update({
+        where: { id: userId },
+        data: {
+            ...(firstName && { firstName }),
+            ...(lastName && { lastName }),
+            ...(subjects && { subjects: subjects.join(',') }),
+            ...(grades && { grades: grades.join(',') }),
+        },
+        select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            subjects: true,
+            grades: true,
+        },
+    });
+
+    res.json({
+        success: true,
+        data: {
+            ...user,
+            subjects: user.subjects?.split(',').filter(Boolean) || [],
+            grades: user.grades?.split(',').filter(Boolean) || [],
+        },
+    });
 }));
 
-// PUT /api/users/:id - Update user
-router.put('/:id', asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const updateData = req.body;
-  
-  logger.info('Updating user', { userId: id, updateData });
-  
-  // Mock update - replace with real logic
-  const updatedUser = {
-    id,
-    ...updateData,
-    updatedAt: new Date().toISOString(),
-  };
-  
-  res.json({
-    success: true,
-    data: updatedUser,
-    message: 'User updated successfully',
-  });
+/**
+ * GET /api/users
+ * List all users with filtering (Admin only)
+ */
+router.get('/', authenticate, requireRole('ADMIN', 'DIET_OFFICIAL', 'SCERT_OFFICIAL'), asyncHandler(async (req, res) => {
+    const { role, district, block, search, page = 1, limit = 10 } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const where: any = {};
+    if (role) where.role = role;
+    if (district) where.school = { district };
+    if (block) where.school = { ...where.school, block };
+    if (search) {
+        where.OR = [
+            { firstName: { contains: search as string } },
+            { lastName: { contains: search as string } },
+            { email: { contains: search as string } },
+        ];
+    }
+
+    const [users, total] = await Promise.all([
+        prisma.user.findMany({
+            where,
+            select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                role: true,
+                status: true,
+                createdAt: true,
+                school: {
+                    select: { name: true, district: true, block: true }
+                },
+                totalReflections: true,
+                streakDays: true,
+                lastActiveAt: true,
+            },
+            skip,
+            take: Number(limit),
+            orderBy: { createdAt: 'desc' },
+        }),
+        prisma.user.count({ where }),
+    ]);
+
+    res.json({
+        success: true,
+        data: {
+            users,
+            pagination: {
+                total,
+                page: Number(page),
+                limit: Number(limit),
+                totalPages: Math.ceil(total / Number(limit)),
+            }
+        },
+    });
 }));
 
-// DELETE /api/users/:id - Delete user
-router.delete('/:id', asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  
-  logger.info('Deleting user', { userId: id });
-  
-  // Mock deletion - replace with real logic
-  res.json({
-    success: true,
-    message: 'User deleted successfully',
-  });
+/**
+ * GET /api/users/:id
+ * Get detailed user profile (Admin only)
+ */
+router.get('/:id', authenticate, requireRole('ADMIN', 'DIET_OFFICIAL', 'SCERT_OFFICIAL'), asyncHandler(async (req, res) => {
+    const user = await prisma.user.findUnique({
+        where: { id: req.params.id },
+        include: {
+            school: {
+                select: {
+                    name: true,
+                    district: true,
+                    block: true,
+                }
+            },
+            reflections: {
+                take: 10,
+                orderBy: { createdAt: 'desc' },
+                select: {
+                    id: true,
+                    title: true,
+                    content: true,
+                    createdAt: true,
+                    sentiment: true,
+                }
+            },
+        },
+    });
+
+    if (!user) {
+        return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    res.json({
+        success: true,
+        data: user,
+    });
 }));
 
-// GET /api/users/:id/stats - Get user statistics
-router.get('/:id/stats', asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  
-  logger.info('Fetching user stats', { userId: id });
-  
-  // Mock stats
-  const stats = {
-    totalReflections: 47,
-    weeklyReflections: 3,
-    monthlyReflections: 12,
-    avgSentiment: 0.2,
-    completedTrainings: 12,
-    streakDays: 15,
-    nepHours: 24.5,
-    engagementScore: 85,
-    lastReflection: new Date().toISOString(),
-  };
-  
-  res.json({
-    success: true,
-    data: stats,
-  });
+/**
+ * PUT /api/users/:id/status
+ * Update user status (Admin only)
+ */
+router.put('/:id/status', authenticate, requireRole('ADMIN'), asyncHandler(async (req, res) => {
+    const { status } = req.body;
+
+    if (!['ACTIVE', 'INACTIVE', 'SUSPENDED'].includes(status)) {
+        return res.status(400).json({ success: false, error: 'Invalid status' });
+    }
+
+    const user = await prisma.user.update({
+        where: { id: req.params.id },
+        data: { status },
+    });
+
+    res.json({
+        success: true,
+        data: { id: user.id, status: user.status },
+    });
 }));
 
 export default router;

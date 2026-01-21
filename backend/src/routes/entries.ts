@@ -15,6 +15,25 @@ const router = express.Router();
 const prisma = new PrismaClient();
 
 /**
+ * POST /api/entries/analyze
+ * Real-time analysis for live suggestions (not persisted)
+ */
+router.post('/analyze', authenticate, asyncHandler(async (req, res) => {
+  const { content, subject, grade } = req.body;
+
+  if (!content) {
+    return res.status(400).json({ success: false, error: 'Content required' });
+  }
+
+  const suggestions = await grokService.analyzeRealtime(content, { subject, grade });
+
+  res.json({
+    success: true,
+    data: { suggestions }
+  });
+}));
+
+/**
  * POST /api/entries/sync
  * Batch sync entries from offline client
  */
@@ -51,40 +70,53 @@ router.post('/', authenticate, asyncHandler(async (req, res) => {
   const userId = req.user!.id;
   const {
     textContent,
+    content: rawContent,
     audioUrl,
     transcript,
+    title,
     grade,
     subject,
+    topic,
+    mood,
     topicTags,
+    tags: rawTags,
     language,
   } = req.body;
 
-  logger.info('Creating entry', { userId });
+  logger.info('Creating entry', { userId, title });
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { schoolId: true },
   });
 
-  const content = transcript || textContent || '';
+  const content = transcript || textContent || rawContent || '';
   if (!content) {
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       error: 'Content is required',
     });
+    return;
   }
+
+  // Handle tags - convert array to comma-separated string
+  const tagsArray = topicTags || rawTags || [];
+  const tagsString = Array.isArray(tagsArray) ? tagsArray.join(',') : tagsArray;
+
+  // Generate title if not provided
+  const entryTitle = title || content.split(/\s+/).slice(0, 8).join(' ') + '...';
 
   const entry = await prisma.reflection.create({
     data: {
-      title: content.split(/\s+/).slice(0, 8).join(' ') + '...',
+      title: entryTitle,
       content: content,
       entryMode: audioUrl ? 'VOICE' : 'TEXT',
-      audioUrl: audioUrl,
-      transcript: transcript || textContent,
-      grade: grade,
-      subject: subject,
-      topic: topicTags?.[0],
-      tags: topicTags || [],
+      audioUrl: audioUrl || null,
+      transcript: transcript || textContent || null,
+      grade: grade || null,
+      subject: subject || null,
+      topic: topic || (tagsArray[0] || null),
+      tags: tagsString || null,
       status: 'SUBMITTED',
       authorId: userId,
       schoolId: user?.schoolId || null,
@@ -92,14 +124,27 @@ router.post('/', authenticate, asyncHandler(async (req, res) => {
     },
   });
 
-  // Trigger AI analysis asynchronously
-  offlineSyncService['analyzeEntryAsync'](entry.id).catch(err => {
-    logger.error(`Failed to analyze entry ${entry.id}`, err);
+  // Update user's reflection count
+  await prisma.user.update({
+    where: { id: userId },
+    data: { totalReflections: { increment: 1 } },
   });
+
+  logger.info('Entry created successfully', { entryId: entry.id, userId });
 
   res.status(201).json({
     success: true,
-    data: entry,
+    data: {
+      id: entry.id,
+      title: entry.title,
+      content: entry.content,
+      subject: entry.subject,
+      grade: entry.grade,
+      tags: entry.tags?.split(',').filter(Boolean) || [],
+      status: entry.status,
+      createdAt: entry.createdAt,
+    },
+    message: 'Your reflection has been saved successfully!',
   });
 }));
 

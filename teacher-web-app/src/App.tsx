@@ -16,24 +16,59 @@ import SettingsScreen from './components/SettingsScreen';
 import ProgressScreen from './components/ProgressScreen';
 import BottomNavigation from './components/BottomNavigation';
 
-// Onboarding Components
+// Onboarding Components (simplified - no language selection)
 import WelcomeScreen from './components/Onboarding/WelcomeScreen';
-import LanguageSelectionScreen from './components/Onboarding/LanguageSelectionScreen';
 import OfflineModeScreen from './components/Onboarding/OfflineModeScreen';
 import PermissionsScreen from './components/Onboarding/PermissionsScreen';
 import ProfileSetupScreen from './components/Onboarding/ProfileSetupScreen';
 
-// Theme is imported from theme/theme.ts
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [isFirstLaunch, setIsFirstLaunch] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if this is first launch
+    // Check for existing auth token and user
+    const token = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
     const hasLaunched = localStorage.getItem('hasLaunched');
-    setIsFirstLaunch(hasLaunched === null);
+
+    if (token && storedUser) {
+      // Verify token is still valid
+      fetch(`${API_BASE}/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(result => {
+          if (result.success) {
+            setCurrentUser(result.data);
+            setIsAuthenticated(true);
+          } else {
+            // Token invalid, clear storage
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+          }
+        })
+        .catch(() => {
+          // Network error, use cached user
+          try {
+            setCurrentUser(JSON.parse(storedUser));
+            setIsAuthenticated(true);
+          } catch {
+            // Invalid cached user
+          }
+        })
+        .finally(() => {
+          setIsFirstLaunch(hasLaunched === null);
+          setIsLoading(false);
+        });
+    } else {
+      setIsFirstLaunch(hasLaunched === null);
+      setIsLoading(false);
+    }
   }, []);
 
   const handleLogin = (user: any) => {
@@ -42,6 +77,8 @@ function App() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setCurrentUser(null);
     setIsAuthenticated(false);
   };
@@ -51,11 +88,11 @@ function App() {
     setIsFirstLaunch(false);
   };
 
-  if (isFirstLaunch === null) {
-    // Loading state
+  if (isLoading) {
     return null;
   }
 
+  // First launch onboarding (simplified - no language selection)
   if (isFirstLaunch) {
     return (
       <ThemeProvider theme={theme}>
@@ -63,7 +100,6 @@ function App() {
         <Router>
           <Routes>
             <Route path="/onboarding/welcome" element={<WelcomeScreen />} />
-            <Route path="/onboarding/language" element={<LanguageSelectionScreen />} />
             <Route path="/onboarding/offline" element={<OfflineModeScreen />} />
             <Route path="/onboarding/permissions" element={<PermissionsScreen />} />
             <Route
@@ -77,6 +113,7 @@ function App() {
     );
   }
 
+  // Not authenticated - show login
   if (!isAuthenticated) {
     return (
       <ThemeProvider theme={theme}>
@@ -93,10 +130,10 @@ function App() {
         {/* Mobile Device Frame */}
         <Box
           sx={{
-            maxWidth: '390px', // iPhone 14 width
+            maxWidth: '390px',
             width: '100%',
             height: '100vh',
-            maxHeight: '844px', // iPhone 14 height
+            maxHeight: '844px',
             margin: '0 auto',
             backgroundColor: '#000',
             position: 'relative',
@@ -118,7 +155,6 @@ function App() {
               flexDirection: 'column',
               overflow: 'hidden',
               position: 'relative',
-              // Safe area insets for mobile
               paddingTop: 'env(safe-area-inset-top, 0px)',
               paddingBottom: 'env(safe-area-inset-bottom, 0px)',
             }}
@@ -130,7 +166,7 @@ function App() {
                 overflowY: 'auto',
                 overflowX: 'hidden',
                 WebkitOverflowScrolling: 'touch',
-                paddingBottom: '72px', // Space for bottom nav
+                paddingBottom: '72px',
                 '&::-webkit-scrollbar': {
                   display: 'none',
                 },

@@ -81,7 +81,7 @@ class ClusteringService {
           sentiment: e.sentiment || undefined,
         })),
         region: filters?.region,
-        timeframe: filters?.startDate 
+        timeframe: filters?.startDate
           ? `${filters.startDate.toISOString()} to ${filters.endDate?.toISOString() || 'now'}`
           : undefined,
       };

@@ -91,11 +91,11 @@ router.post(
  * Get all training modules
  */
 router.get('/', authenticate, asyncHandler(async (req, res) => {
-  const { 
-    page = 1, 
-    limit = 25, 
-    subject, 
-    grade, 
+  const {
+    page = 1,
+    limit = 25,
+    subject,
+    grade,
     difficulty,
     language,
   } = req.query;
@@ -183,7 +183,7 @@ router.post(
 
     // Get teachers from clusters if specified
     let targetTeacherIds = teacherIds || [];
-    
+
     if (clusterIds && clusterIds.length > 0) {
       const clusterReflections = await prisma.clusterReflection.findMany({
         where: {

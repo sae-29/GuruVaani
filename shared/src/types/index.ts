@@ -67,7 +67,7 @@ export interface User {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-  
+
   // Teacher-specific fields
   employeeId?: string;
   subjects: string[];
@@ -75,14 +75,14 @@ export interface User {
   experience?: number;
   qualifications?: string;
   preferredLanguage: string;
-  
+
   // Engagement metrics
   lastActiveAt?: string;
   totalReflections: number;
   completedTrainings: number;
   streakDays: number;
   nepHours: number;
-  
+
   // Relations
   schoolId?: string;
   school?: School;
@@ -115,25 +115,25 @@ export interface Reflection {
   transcript?: string;
   type: ReflectionType;
   status: ReflectionStatus;
-  
+
   // Context tagging
   grade?: string;
   subject?: string;
   topic?: string;
   tags: string[];
-  
+
   // AI analysis
   sentiment?: number;
   keywords: string[];
   priority: ClusterPriority;
-  
+
   isPrivate: boolean;
   createdAt: string;
   updatedAt: string;
   submittedAt?: string;
   analyzedAt?: string;
   resolvedAt?: string;
-  
+
   // Relations
   authorId: string;
   author?: User;
@@ -156,7 +156,7 @@ export interface Cluster {
   createdAt: string;
   updatedAt: string;
   resolvedAt?: string;
-  
+
   // Relations
   reflections?: ClusterReflection[];
   trainings?: ClusterTraining[];
@@ -171,6 +171,15 @@ export interface ClusterReflection {
   reflection?: Reflection;
 }
 
+export interface ClusterTraining {
+  id: string;
+  clusterId: string;
+  trainingId: string;
+  relevance?: number;
+  cluster?: Cluster;
+  training?: TrainingModule;
+}
+
 export interface TrainingModule {
   id: string;
   title: string;
@@ -178,12 +187,12 @@ export interface TrainingModule {
   content?: string;
   format: TrainingFormat;
   duration: number;
-  
+
   // Media files
   videoUrl?: string;
   audioUrl?: string;
   thumbnailUrl?: string;
-  
+
   // Metadata
   subjects: string[];
   grades: string[];
@@ -191,12 +200,12 @@ export interface TrainingModule {
   difficulty: string;
   language: string;
   nepCompetencies: string[];
-  
+
   // Engagement metrics
   viewCount: number;
   completionRate: number;
   avgRating: number;
-  
+
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -212,7 +221,7 @@ export interface UserTraining {
   rating?: number;
   feedback?: string;
   timeSpent?: number;
-  
+
   user?: User;
   training?: TrainingModule;
 }
@@ -242,7 +251,7 @@ export interface Comment {
   isAnonymous: boolean;
   createdAt: string;
   updatedAt: string;
-  
+
   // Relations
   authorId: string;
   author?: User;

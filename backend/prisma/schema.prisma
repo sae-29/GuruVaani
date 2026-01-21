@@ -18,6 +18,7 @@ model User {
   phoneNumber String?
   avatar      String?
   isActive    Boolean  @default(true)
+  status      String   @default("ACTIVE") // ACTIVE, INACTIVE, SUSPENDED
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

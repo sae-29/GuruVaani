@@ -13,6 +13,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -35,14 +36,27 @@ export const LoginPage: React.FC = () => {
     setError('');
 
     try {
-      // TODO: Implement actual authentication
-      console.log('Login attempt:', formData);
-      // Simulate successful login
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1000);
-    } catch (err) {
-      setError('Login failed. Please try again.');
+      const response = await api.post('/auth/login', {
+        email: formData.username, // Assuming username is email for now
+        password: formData.password,
+      });
+
+      if (response.data.success) {
+        const { user, token } = response.data.data;
+
+        // Verify role
+        if (user.role === 'ADMIN' || user.role === 'DIET_OFFICIAL' || user.role === 'SCERT_OFFICIAL') {
+          localStorage.setItem('admin_token', token);
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(user));
+          navigate('/dashboard');
+        } else {
+          setError('Access denied. This portal is for Admins and Officials only.');
+        }
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Login failed. Please check your credentials.');
+    } finally {
       setLoading(false);
     }
   };
