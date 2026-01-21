@@ -25,7 +25,12 @@ router.post('/analyze', authenticate, asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, error: 'Content required' });
   }
 
-  const suggestions = await grokService.analyzeRealtime(content, { subject, grade });
+  const aiResponse = await grokService.generateTeacherResponse({
+    diaryText: content,
+    subject,
+    grade
+  });
+  const suggestions = aiResponse.tips;
 
   res.json({
     success: true,
@@ -227,7 +232,7 @@ router.get('/:id', authenticate, asyncHandler(async (req, res) => {
   }
 
   // Get AI suggestions if available
-  let aiResponse = null;
+  let aiResponse: any = null;
   try {
     aiResponse = await grokService.generateTeacherResponse({
       diaryText: entry.transcript || entry.content,

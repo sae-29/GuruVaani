@@ -22,7 +22,6 @@ import {
   Search,
   FilterList,
   AutoAwesome,
-  Lightbulb,
   HistoryEdu,
   Refresh,
 } from '@mui/icons-material';

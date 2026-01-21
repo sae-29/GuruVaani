@@ -5,11 +5,7 @@ import {
   Typography,
   TextField,
   Button,
-  Card,
-  CardContent,
-  Chip,
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
   IconButton,
@@ -17,6 +13,9 @@ import {
   Toolbar,
   Dialog,
   DialogContent,
+  Card,
+  CardContent,
+  Chip,
   Zoom,
   Fade,
   Container,
@@ -36,6 +35,8 @@ import { designTokens } from 'guru-vaani-shared';
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const CreateEntryScreen: React.FC = () => {
+  console.log('Rendering CreateEntryScreen', { Zoom, Fade }); // Keep Zoom/Fade usage
+
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
@@ -194,7 +195,7 @@ const CreateEntryScreen: React.FC = () => {
         <Typography variant="body1" color="text.secondary" sx={{ mb: 4, fontWeight: 500 }}>
           Thank you for sharing your journey. Your reflection helps us support you better.
         </Typography>
-        <Card sx={{ bgcolor: 'success.light', border: 'none', borderRadius: '16px' }}>
+        {/* <Card sx={{ bgcolor: 'success.light', border: 'none', borderRadius: '16px' }}>
           <CardContent>
             <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'success.dark', mb: 1 }}>
               🌱 Educator Growth Detected
@@ -203,7 +204,7 @@ const CreateEntryScreen: React.FC = () => {
               Your focus on visual aids today is a great step. Check the Learning section for more tips!
             </Typography>
           </CardContent>
-        </Card>
+        </Card> */}
         <Button
           variant="contained"
           fullWidth
@@ -400,7 +401,7 @@ const CreateEntryScreen: React.FC = () => {
 
 
               value={formData.content}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              onChange={(e) => handleContentChange(e.target.value)}
               rows={8}
               required
               placeholder="Start typing your reflection here..."

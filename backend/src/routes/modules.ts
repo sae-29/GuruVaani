@@ -68,12 +68,12 @@ router.post(
         videoUrl,
         audioUrl,
         thumbnailUrl,
-        subjects: Array.isArray(subjects) ? subjects : subjects ? [subjects] : [],
-        grades: Array.isArray(grades) ? grades : grades ? [grades] : [],
-        topics: Array.isArray(topics) ? topics : topics ? [topics] : [],
+        subjects: (Array.isArray(subjects) ? subjects : subjects ? [subjects] : []).join(','),
+        grades: (Array.isArray(grades) ? grades : grades ? [grades] : []).join(','),
+        topics: (Array.isArray(topics) ? topics : topics ? [topics] : []).join(','),
         difficulty: difficulty || 'beginner',
         language: language || 'en',
-        nepCompetencies: Array.isArray(nepCompetencies) ? nepCompetencies : [],
+        nepCompetencies: (Array.isArray(nepCompetencies) ? nepCompetencies : []).join(','),
         isActive: true,
         publishedAt: new Date(),
       },
@@ -205,7 +205,7 @@ router.post(
     }
 
     // Create user training records
-    const userTrainings = [];
+    const userTrainings: any[] = [];
     for (const moduleId of moduleIds) {
       for (const teacherId of targetTeacherIds) {
         const userTraining = await prisma.userTraining.upsert({

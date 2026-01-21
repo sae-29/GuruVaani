@@ -33,7 +33,7 @@ class NotificationService {
             type: request.type,
             title: request.title,
             message: request.message,
-            data: request.data || {},
+            data: JSON.stringify(request.data || {}),
             channel: 'IN_APP',
             isRead: false,
           },

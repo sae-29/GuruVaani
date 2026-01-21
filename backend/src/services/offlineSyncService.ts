@@ -63,11 +63,11 @@ class OfflineSyncService {
         select: { lastActiveAt: true },
       });
 
-      const lastSync = user?.lastActiveAt 
+      const lastSync = user?.lastActiveAt
         ? new Date(user.lastActiveAt)
-        : batch.lastSyncTimestamp 
-        ? new Date(batch.lastSyncTimestamp)
-        : null;
+        : batch.lastSyncTimestamp
+          ? new Date(batch.lastSyncTimestamp)
+          : null;
 
       // Process each entry
       for (const entry of batch.entries) {
@@ -128,7 +128,7 @@ class OfflineSyncService {
    */
   private async saveEntry(userId: string, entry: SyncEntry) {
     const content = entry.transcript || entry.textContent || '';
-    
+
     // Get user's school
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -145,7 +145,7 @@ class OfflineSyncService {
         grade: entry.grade,
         subject: entry.subject,
         topic: entry.topicTags?.[0],
-        tags: entry.topicTags || [],
+        tags: (entry.topicTags || []).join(','),
         status: 'SUBMITTED',
         authorId: userId,
         schoolId: user?.schoolId || null,
@@ -163,7 +163,7 @@ class OfflineSyncService {
     lastSync: Date | null
   ): boolean {
     if (!lastSync) return false;
-    
+
     const serverUpdated = new Date(serverEntry.updatedAt);
     const clientCreated = new Date(clientEntry.createdAt);
 
@@ -206,7 +206,7 @@ class OfflineSyncService {
         where: { id: entryId },
         data: {
           sentiment: sentiment,
-          keywords: this.extractKeywords(entry.content),
+          keywords: this.extractKeywords(entry.content).join(','),
           status: 'AI_ANALYZED',
           analyzedAt: new Date(),
         },
@@ -219,7 +219,7 @@ class OfflineSyncService {
           wordCount: entry.content.split(/\s+/).length,
           readingTime: Math.ceil(entry.content.split(/\s+/).length / 200), // ~200 words per minute
           sentimentScore: sentiment,
-          keyThemes: aiResponse.tips,
+          keyThemes: aiResponse.tips.join(','),
         },
       });
 
@@ -243,18 +243,18 @@ class OfflineSyncService {
     // Simple sentiment analysis (can be replaced with better NLP)
     const positiveWords = ['good', 'great', 'excellent', 'happy', 'success', 'improve', 'better'];
     const negativeWords = ['difficult', 'struggle', 'problem', 'frustrated', 'challenge', 'hard', 'failed'];
-    
+
     const lowerText = text.toLowerCase();
     let score = 0;
-    
+
     positiveWords.forEach(word => {
       if (lowerText.includes(word)) score += 0.1;
     });
-    
+
     negativeWords.forEach(word => {
       if (lowerText.includes(word)) score -= 0.1;
     });
-    
+
     return Math.max(-1, Math.min(1, score));
   }
 
@@ -265,11 +265,11 @@ class OfflineSyncService {
     // Simple keyword extraction (can be improved)
     const words = text.toLowerCase().match(/\b\w{4,}\b/g) || [];
     const frequency: Record<string, number> = {};
-    
+
     words.forEach(word => {
       frequency[word] = (frequency[word] || 0) + 1;
     });
-    
+
     return Object.entries(frequency)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
