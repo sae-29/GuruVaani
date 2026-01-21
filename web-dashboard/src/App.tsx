@@ -11,7 +11,7 @@ import Teachers from './pages/Teachers/Teachers';
 import { EntriesPage } from './pages/Entries';
 import { ClustersPage } from './pages/Clusters';
 import Analytics from './pages/Analytics';
-import Settings from './pages/Settings/Settings';
+import Settings from './pages/Settings';
 import Login from './pages/Login';
 import ModuleLibrary from './pages/Modules/ModuleLibrary';
 import ModuleCreator from './pages/Modules/ModuleCreator';

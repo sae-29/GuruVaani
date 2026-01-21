@@ -240,7 +240,7 @@ class ClusteringService {
 
       const totalTrainings = await prisma.userTraining.count({
         where: {
-          ...(filters?.startDate && { assignedAt: { gte: filters.startDate } }),
+          ...(filters?.startDate && { createdAt: { gte: filters.startDate } }),
         },
       });
 
@@ -277,7 +277,7 @@ class ClusteringService {
             id: cluster.id,
             title: cluster.title,
             description: cluster.description,
-            keywords: null,
+            keywords: [],
             priority: cluster.priority,
             teacherCount: cluster.frequency,
             isActive: true,

@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import { 
-  Container, 
-  Box, 
-  Typography, 
-  Paper, 
-  Slider, 
-  FormControl, 
-  InputLabel, 
-  Select, 
-  MenuItem, 
-  Grid 
+import {
+  Container,
+  Box,
+  Typography,
+  Paper,
+  Slider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Grid
 } from '@mui/material';
-import { ClusterGrid } from '@/components/ClusterGrid';
+import { ClusterGrid } from '../components/ClusterGrid';
 
 export const ClustersPage: React.FC = () => {
   const [sensitivity, setSensitivity] = useState<number>(70);
@@ -61,24 +61,24 @@ export const ClustersPage: React.FC = () => {
             </Box>
           </Grid>
           <Grid item xs={12} md={3}>
-             <FormControl fullWidth size="small">
-               <InputLabel>Time Range</InputLabel>
-               <Select value={timeRange} label="Time Range" onChange={(e) => setTimeRange(e.target.value)}>
-                 <MenuItem value="week">Last 7 Days</MenuItem>
-                 <MenuItem value="month">Last 30 Days</MenuItem>
-                 <MenuItem value="quarter">Last Quarter</MenuItem>
-               </Select>
-             </FormControl>
+            <FormControl fullWidth size="small">
+              <InputLabel>Time Range</InputLabel>
+              <Select value={timeRange} label="Time Range" onChange={(e) => setTimeRange(e.target.value)}>
+                <MenuItem value="week">Last 7 Days</MenuItem>
+                <MenuItem value="month">Last 30 Days</MenuItem>
+                <MenuItem value="quarter">Last Quarter</MenuItem>
+              </Select>
+            </FormControl>
           </Grid>
           <Grid item xs={12} md={3}>
-             <FormControl fullWidth size="small">
-               <InputLabel>AI Method</InputLabel>
-               <Select defaultValue="semantic" label="AI Method">
-                 <MenuItem value="semantic">Semantic Similarity</MenuItem>
-                 <MenuItem value="keyword">Keyword Matching</MenuItem>
-                 <MenuItem value="topic">Topic Modeling</MenuItem>
-               </Select>
-             </FormControl>
+            <FormControl fullWidth size="small">
+              <InputLabel>AI Method</InputLabel>
+              <Select defaultValue="semantic" label="AI Method">
+                <MenuItem value="semantic">Semantic Similarity</MenuItem>
+                <MenuItem value="keyword">Keyword Matching</MenuItem>
+                <MenuItem value="topic">Topic Modeling</MenuItem>
+              </Select>
+            </FormControl>
           </Grid>
         </Grid>
       </Paper>

@@ -24,7 +24,7 @@ dotenv.config();
 
 const app = express();
 const prisma = new PrismaClient();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 
 // Rate limiting
 const limiter = rateLimit({
@@ -45,6 +45,8 @@ app.use(cors({
     'http://localhost:3004',
     'http://localhost:3006',
     'http://localhost:5173',
+    'http://localhost:5176',
+    'http://localhost:5183',
   ],
   credentials: true,
 }));

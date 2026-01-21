@@ -145,7 +145,7 @@ class OfflineSyncService {
         grade: entry.grade,
         subject: entry.subject,
         topic: entry.topicTags?.[0],
-        tags: (entry.topicTags || []).join(','),
+        tags: entry.topicTags || [],
         status: 'SUBMITTED',
         authorId: userId,
         schoolId: user?.schoolId || null,
@@ -206,7 +206,7 @@ class OfflineSyncService {
         where: { id: entryId },
         data: {
           sentiment: sentiment,
-          keywords: this.extractKeywords(entry.content).join(','),
+          keywords: this.extractKeywords(entry.content),
           status: 'AI_ANALYZED',
           analyzedAt: new Date(),
         },
@@ -219,7 +219,7 @@ class OfflineSyncService {
           wordCount: entry.content.split(/\s+/).length,
           readingTime: Math.ceil(entry.content.split(/\s+/).length / 200), // ~200 words per minute
           sentimentScore: sentiment,
-          keyThemes: aiResponse.tips.join(','),
+          keyThemes: aiResponse.tips,
         },
       });
 

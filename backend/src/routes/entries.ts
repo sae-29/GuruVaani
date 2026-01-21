@@ -25,12 +25,7 @@ router.post('/analyze', authenticate, asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, error: 'Content required' });
   }
 
-  const aiResponse = await grokService.generateTeacherResponse({
-    diaryText: content,
-    subject,
-    grade
-  });
-  const suggestions = aiResponse.tips;
+  const suggestions = await grokService.analyzeRealtime(content, { subject, grade });
 
   res.json({
     success: true,
@@ -71,61 +66,78 @@ router.post('/sync', authenticate, asyncHandler(async (req, res) => {
  * POST /api/entries
  * Create a single entry (online mode)
  */
+import { z } from 'zod';
+
+const entrySchema = z.object({
+  textContent: z.string().optional(),
+  content: z.string().optional(),
+  audioUrl: z.string().url().optional().nullable(),
+  transcript: z.string().optional().nullable(),
+  title: z.string().optional(),
+  grade: z.string().optional().nullable(),
+  subject: z.string().optional().nullable(),
+  topic: z.string().optional().nullable(),
+  tags: z.union([z.string(), z.array(z.string())]).optional(),
+  topicTags: z.array(z.string()).optional(),
+  sentiment: z.number().min(-1).max(1).optional(),
+}).refine(data => data.content || data.textContent || data.transcript, {
+  message: "Content is required (text, transcript, or raw content)",
+  path: ["content"]
+});
+
 router.post('/', authenticate, asyncHandler(async (req, res) => {
   const userId = req.user!.id;
-  const {
-    textContent,
-    content: rawContent,
-    audioUrl,
-    transcript,
-    title,
-    grade,
-    subject,
-    topic,
-    mood,
-    topicTags,
-    tags: rawTags,
-    language,
-  } = req.body;
 
-  logger.info('Creating entry', { userId, title });
+  // Validate request body
+  const validation = entrySchema.safeParse(req.body);
+  if (!validation.success) {
+    return res.status(400).json({
+      success: false,
+      error: 'Validation failed',
+      details: validation.error.format()
+    });
+  }
+
+  const data = validation.data;
+  const rawContent = data.content || data.textContent || '';
+  const finalContent = data.transcript || rawContent || '';
+
+  logger.info('Creating entry', { userId, hasAudio: !!data.audioUrl });
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { schoolId: true },
   });
 
-  const content = transcript || textContent || rawContent || '';
-  if (!content) {
-    res.status(400).json({
-      success: false,
-      error: 'Content is required',
-    });
-    return;
+  // Handle tags normalization
+  let tagsString = '';
+  if (Array.isArray(data.topicTags)) {
+    tagsString = data.topicTags.join(',');
+  } else if (Array.isArray(data.tags)) {
+    tagsString = data.tags.join(',');
+  } else if (typeof data.tags === 'string') {
+    tagsString = data.tags;
   }
 
-  // Handle tags - convert array to comma-separated string
-  const tagsArray = topicTags || rawTags || [];
-  const tagsString = Array.isArray(tagsArray) ? tagsArray.join(',') : tagsArray;
-
-  // Generate title if not provided
-  const entryTitle = title || content.split(/\s+/).slice(0, 8).join(' ') + '...';
+  // Generate title if missing
+  const entryTitle = data.title || finalContent.split(/\s+/).slice(0, 8).join(' ') + '...';
 
   const entry = await prisma.reflection.create({
     data: {
       title: entryTitle,
-      content: content,
-      entryMode: audioUrl ? 'VOICE' : 'TEXT',
-      audioUrl: audioUrl || null,
-      transcript: transcript || textContent || null,
-      grade: grade || null,
-      subject: subject || null,
-      topic: topic || (tagsArray[0] || null),
-      tags: tagsString || null,
+      content: finalContent,
+      entryMode: data.audioUrl ? 'VOICE' : 'TEXT',
+      audioUrl: data.audioUrl,
+      transcript: data.transcript,
+      grade: data.grade,
+      subject: data.subject,
+      topic: data.topic,
+      tags: tagsString,
       status: 'SUBMITTED',
       authorId: userId,
-      schoolId: user?.schoolId || null,
+      schoolId: user?.schoolId,
       submittedAt: new Date(),
+      sentiment: data.sentiment // Accept frontend sentiment if provided
     },
   });
 
@@ -142,10 +154,6 @@ router.post('/', authenticate, asyncHandler(async (req, res) => {
     data: {
       id: entry.id,
       title: entry.title,
-      content: entry.content,
-      subject: entry.subject,
-      grade: entry.grade,
-      tags: entry.tags?.split(',').filter(Boolean) || [],
       status: entry.status,
       createdAt: entry.createdAt,
     },
@@ -232,7 +240,7 @@ router.get('/:id', authenticate, asyncHandler(async (req, res) => {
   }
 
   // Get AI suggestions if available
-  let aiResponse: any = null;
+  let aiResponse = null;
   try {
     aiResponse = await grokService.generateTeacherResponse({
       diaryText: entry.transcript || entry.content,

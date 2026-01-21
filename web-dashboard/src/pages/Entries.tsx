@@ -35,7 +35,7 @@ import {
   Close,
   Refresh,
 } from '@mui/icons-material';
-import { ClusterGrid } from '@/components/ClusterGrid';
+import { ClusterGrid } from '../components/ClusterGrid';
 import api from '../services/api';
 import { designTokens } from 'guru-vaani-shared';
 

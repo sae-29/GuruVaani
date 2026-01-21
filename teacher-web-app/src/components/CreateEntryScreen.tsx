@@ -5,7 +5,11 @@ import {
   Typography,
   TextField,
   Button,
+  Card,
+  CardContent,
+  Chip,
   FormControl,
+  InputLabel,
   Select,
   MenuItem,
   IconButton,
@@ -13,13 +17,7 @@ import {
   Toolbar,
   Dialog,
   DialogContent,
-  Card,
-  CardContent,
-  Chip,
   Zoom,
-  Fade,
-  Container,
-  Paper,
 } from '@mui/material';
 import {
   ArrowBack,
@@ -35,8 +33,6 @@ import { designTokens } from 'guru-vaani-shared';
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const CreateEntryScreen: React.FC = () => {
-  console.log('Rendering CreateEntryScreen', { Zoom, Fade }); // Keep Zoom/Fade usage
-
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
@@ -195,7 +191,7 @@ const CreateEntryScreen: React.FC = () => {
         <Typography variant="body1" color="text.secondary" sx={{ mb: 4, fontWeight: 500 }}>
           Thank you for sharing your journey. Your reflection helps us support you better.
         </Typography>
-        {/* <Card sx={{ bgcolor: 'success.light', border: 'none', borderRadius: '16px' }}>
+        <Card sx={{ bgcolor: 'success.light', border: 'none', borderRadius: '16px' }}>
           <CardContent>
             <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'success.dark', mb: 1 }}>
               🌱 Educator Growth Detected
@@ -204,7 +200,7 @@ const CreateEntryScreen: React.FC = () => {
               Your focus on visual aids today is a great step. Check the Learning section for more tips!
             </Typography>
           </CardContent>
-        </Card> */}
+        </Card>
         <Button
           variant="contained"
           fullWidth
@@ -270,230 +266,202 @@ const CreateEntryScreen: React.FC = () => {
         </Toolbar>
       </AppBar>
 
-
-
-      <Container maxWidth="md" sx={{ py: 3 }}>
-        <Box component="form" onSubmit={handleSubmit}>
-          {/* Section 1: Context Details */}
-          <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: '24px', border: '1px solid rgba(0,0,0,0.05)' }}>
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 700, color: 'text.secondary', ml: 1 }}>
-                REFLECTION TITLE
-              </Typography>
-              <TextField
-                fullWidth
-                value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                required
-                placeholder="e.g. My Morning Math Class"
-                variant="outlined"
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '16px',
-                    bgcolor: '#F9FAFB',
-                    '& fieldset': { border: 'none' },
-                    '&:hover fieldset': { border: '1px solid rgba(0,0,0,0.1)' },
-                    '&.Mui-focused fieldset': { border: `1px solid ${designTokens.colors.primary.main}` }
-                  }
-                }}
-              />
-            </Box>
-
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <FormControl fullWidth>
-                <Select
-                  displayEmpty
-                  value={formData.subject}
-                  onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
-                  sx={{
-                    borderRadius: '16px',
-                    bgcolor: '#F9FAFB',
-                    '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
-                  }}
-                  renderValue={(selected) => {
-                    if (!selected) {
-                      return <Typography color="text.secondary">Subject</Typography>;
-                    }
-                    return selected;
-                  }}
-                >
-                  <MenuItem disabled value="">
-                    <Typography variant="body2" color="text.secondary">Select Subject</Typography>
-                  </MenuItem>
-                  {subjects.map(subject => (
-                    <MenuItem key={subject} value={subject}>{subject}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth>
-                <Select
-                  displayEmpty
-                  value={formData.grade}
-                  onChange={(e) => setFormData(prev => ({ ...prev, grade: e.target.value }))}
-                  sx={{
-                    borderRadius: '16px',
-                    bgcolor: '#F9FAFB',
-                    '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
-                  }}
-                  renderValue={(selected) => {
-                    if (!selected) {
-                      return <Typography color="text.secondary">Class</Typography>;
-                    }
-                    return selected;
-                  }}
-                >
-                  <MenuItem disabled value="">
-                    <Typography variant="body2" color="text.secondary">Select Grade</Typography>
-                  </MenuItem>
-                  {grades.map(grade => (
-                    <MenuItem key={grade} value={grade}>{grade}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-          </Paper>
-
-          {/* Section 2: Mood Data */}
-          <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: '24px', border: '1px solid rgba(0,0,0,0.05)' }}>
-            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 700, color: 'text.secondary', ml: 1 }}>
-              HOW WAS THE EXPERIENCE?
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', pb: 1, '::-webkit-scrollbar': { display: 'none' } }}>
-              {moods.map(mood => (
-                <Box
-                  key={mood.value}
-                  onClick={() => setFormData(prev => ({ ...prev, mood: mood.value }))}
-                  sx={{
-                    flexShrink: 0,
-                    p: 2,
-                    minWidth: 90,
-                    bgcolor: formData.mood === mood.value ? `${mood.color}15` : '#F9FAFB',
-                    borderRadius: '20px',
-                    border: '2px solid',
-                    borderColor: formData.mood === mood.value ? mood.color : 'transparent',
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                    transition: 'all 0.2s',
-                    '&:hover': { transform: 'translateY(-2px)' }
-                  }}
-                >
-                  <Typography variant="h3" sx={{ mb: 1, fontSize: '2rem' }}>{mood.label.split(' ')[0]}</Typography>
-                  <Typography variant="caption" sx={{
-                    fontWeight: 700,
-                    display: 'block',
-                    color: formData.mood === mood.value ? mood.color : 'text.secondary'
-                  }}>
-                    {mood.label.split(' ')[1]}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
-          </Paper>
-
-          {/* Section 3: Story Input */}
-          <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: '24px', border: '1px solid rgba(0,0,0,0.05)' }}>
-            <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 700, color: 'text.secondary', ml: 1 }}>
-              TELL YOUR STORY
-            </Typography>
-            <TextField
-              fullWidth
-
-
-              value={formData.content}
-              onChange={(e) => handleContentChange(e.target.value)}
-              rows={8}
-              required
-              placeholder="Start typing your reflection here..."
-              variant="outlined"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '16px',
-                  bgcolor: '#F9FAFB',
-                  '& fieldset': { border: 'none' },
-                  '&:hover fieldset': { border: '1px solid rgba(0,0,0,0.1)' },
-                  '&.Mui-focused fieldset': { border: `1px solid ${designTokens.colors.primary.main}` },
-                  padding: 2,
-                  fontSize: '1.05rem',
-                  lineHeight: 1.6
-                }
-              }}
-            />
-          </Paper>
-
-          {/* AI Suggestions Section (Warmer) */}
-          {aiSuggestions.length > 0 && (
-            <Box sx={{ mb: 4 }}>
-              <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 800, color: 'secondary.main', textTransform: 'uppercase', ml: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <AutoAwesome fontSize="small" /> AI Support Suggestions
-              </Typography>
-              {aiSuggestions.map((suggestion, index) => (
-                <Card key={index} elevation={0} sx={{ mb: 1.5, borderRadius: '16px', bgcolor: 'secondary.light', border: 'none' }}>
-                  <CardContent sx={{ p: '16px !important', display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-                    <Lightbulb sx={{ color: 'secondary.main', mt: 0.5 }} />
-                    <Typography variant="body2" sx={{ fontWeight: 700, color: 'secondary.dark', lineHeight: 1.4 }}>
-                      {suggestion}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              ))}
-            </Box>
-          )}
-
-          {/* Tags */}
-          <Card sx={{ mb: 2, borderRadius: 3 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Tags
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                {formData.tags.map(tag => (
-                  <Chip
-                    key={tag}
-                    label={tag}
-                    onDelete={() => removeTag(tag)}
-                    color="primary"
-                  />
-                ))}
-              </Box>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {['visual-aids', 'group-work', 'struggling-students', 'engagement', 'assessment'].map(tag => (
-                  <Chip
-                    key={tag}
-                    label={tag}
-                    variant="outlined"
-                    onClick={() => addTag(tag)}
-                    sx={{ cursor: 'pointer' }}
-                  />
-                ))}
-              </Box>
-            </CardContent>
-          </Card>
-
-          <Button
-            type="submit"
-            variant="contained"
-            size="large"
+      <Box component="form" onSubmit={handleSubmit} sx={{ p: 2 }}>
+        {/* Title Input */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', ml: 1 }}>
+            Title your reflection
+          </Typography>
+          <TextField
             fullWidth
-            disableElevation
-            disabled={loading || !formData.title || !formData.content}
-            startIcon={loading ? undefined : <Send />}
+            value={formData.title}
+            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+            required
+            placeholder="e.g. My Morning Math Class"
             sx={{
-              py: 2.5,
-              borderRadius: '24px',
-              fontSize: '1.2rem',
-              fontWeight: 800,
-              textTransform: 'none',
-              boxShadow: '0 12px 24px rgba(255, 112, 67, 0.25)',
-              mb: 6,
-              transition: 'transform 0.2s',
-              '&:hover': { transform: 'scale(1.02)' }
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '16px',
+                bgcolor: 'white',
+                fontWeight: 600,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+              }
             }}
-          >
-            {loading ? 'Thinking & Saving...' : 'Post Reflection'}
-          </Button>
+          />
         </Box>
-      </Container>
+
+        <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+          <FormControl sx={{ flex: 1 }}>
+            <InputLabel>Subject</InputLabel>
+            <Select
+              value={formData.subject}
+              onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
+              label="Subject"
+              sx={{ borderRadius: '12px', bgcolor: 'white' }}
+            >
+              {subjects.map(subject => (
+                <MenuItem key={subject} value={subject}>{subject}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl sx={{ flex: 1 }}>
+            <InputLabel>Class</InputLabel>
+            <Select
+              value={formData.grade}
+              onChange={(e) => setFormData(prev => ({ ...prev, grade: e.target.value }))}
+              label="Class"
+              sx={{ borderRadius: '12px', bgcolor: 'white' }}
+            >
+              {grades.map(grade => (
+                <MenuItem key={grade} value={grade}>{grade}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+
+        {/* Mood Selection */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', ml: 1 }}>
+            How was the experience?
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'nowrap', overflowX: 'auto', gap: 1.5, pb: 1, px: 1 }}>
+            {moods.map(mood => (
+              <Box
+                key={mood.value}
+                onClick={() => setFormData(prev => ({ ...prev, mood: mood.value }))}
+                sx={{
+                  flexShrink: 0,
+                  p: 2,
+                  bgcolor: formData.mood === mood.value ? `${mood.color}15` : 'white',
+                  borderRadius: '16px',
+                  border: '2px solid',
+                  borderColor: formData.mood === mood.value ? mood.color : 'rgba(0,0,0,0.05)',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  minWidth: 80,
+                  transition: 'all 0.2s'
+                }}
+              >
+                <Typography variant="h4" sx={{ mb: 0.5 }}>{mood.label.split(' ')[0]}</Typography>
+                <Typography variant="caption" sx={{ fontWeight: 800, color: formData.mood === mood.value ? mood.color : 'text.secondary' }}>
+                  {mood.label.split(' ')[1]}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+
+        {/* Content */}
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', ml: 1, letterSpacing: '0.05em' }}>
+            Tell your story
+          </Typography>
+          <TextField
+            fullWidth
+            multiline
+            rows={5}
+            value={formData.content}
+            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+
+
+            required
+            placeholder="What happened in class today? Share your challenges, successes, and reflections..."
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '12px',
+                bgcolor: 'white',
+                lineHeight: 1.6,
+                padding: 10,
+                fontSize: '1.05rem',
+                border: isRecording ? `2px solid ${designTokens.colors.primary.main}` : '1px solid rgba(0,0,0,0.08)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.02)',
+                animation: isRecording ? 'pulse-border 1.5s infinite' : 'none',
+                '@keyframes pulse-border': {
+                  '0%, 100%': { borderColor: designTokens.colors.primary.main },
+                  '50%': { borderColor: 'transparent' }
+                },
+                '&:hover': {
+                  border: '1px solid rgba(0,0,0,0.15)',
+                },
+                '&.Mui-focused': {
+                  boxShadow: '0 4px 20px rgba(255, 112, 67, 0.1)',
+                  borderColor: designTokens.colors.primary.main,
+                }
+              }
+            }}
+          />
+        </Box>
+
+        {/* AI Suggestions Section (Warmer) */}
+        {aiSuggestions.length > 0 && (
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 800, color: 'secondary.main', textTransform: 'uppercase', ml: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <AutoAwesome fontSize="small" /> AI Support Suggestions
+            </Typography>
+            {aiSuggestions.map((suggestion, index) => (
+              <Card key={index} elevation={0} sx={{ mb: 1.5, borderRadius: '16px', bgcolor: 'secondary.light', border: 'none' }}>
+                <CardContent sx={{ p: '16px !important', display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                  <Lightbulb sx={{ color: 'secondary.main', mt: 0.5 }} />
+                  <Typography variant="body2" sx={{ fontWeight: 700, color: 'secondary.dark', lineHeight: 1.4 }}>
+                    {suggestion}
+                  </Typography>
+                </CardContent>
+              </Card>
+            ))}
+          </Box>
+        )}
+
+        {/* Tags */}
+        <Card sx={{ mb: 2, borderRadius: 3 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Tags
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+              {formData.tags.map(tag => (
+                <Chip
+                  key={tag}
+                  label={tag}
+                  onDelete={() => removeTag(tag)}
+                  color="primary"
+                />
+              ))}
+            </Box>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {['visual-aids', 'group-work', 'struggling-students', 'engagement', 'assessment'].map(tag => (
+                <Chip
+                  key={tag}
+                  label={tag}
+                  variant="outlined"
+                  onClick={() => addTag(tag)}
+                  sx={{ cursor: 'pointer' }}
+                />
+              ))}
+            </Box>
+          </CardContent>
+        </Card>
+
+        <Button
+          type="submit"
+          variant="contained"
+          size="large"
+          fullWidth
+          disableElevation
+          disabled={loading || !formData.title || !formData.content}
+          startIcon={loading ? undefined : <Send />}
+          sx={{
+            py: 2.5,
+            borderRadius: '20px',
+            fontSize: '1.2rem',
+            fontWeight: 800,
+            textTransform: 'none',
+            boxShadow: '0 8px 16px rgba(255, 112, 67, 0.2)',
+            mb: 4
+          }}
+        >
+          {loading ? 'Thinking & Saving...' : 'Post Reflection'}
+        </Button>
+      </Box>
 
       {/* Success Dialog */}
       <Dialog
@@ -533,7 +501,7 @@ const CreateEntryScreen: React.FC = () => {
           </Typography>
         </DialogContent>
       </Dialog>
-    </Box >
+    </Box>
   );
 };
 

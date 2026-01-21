@@ -1,66 +1,62 @@
-# Guru Vaani - AI-Powered Teacher Reflection Platform
+# Guru Vaani - AI-Powered Teacher Support Platform
 
-Guru Vaani is a comprehensive platform designed to empower teachers through AI-assisted reflection and provide administrators with actionable insights into educational trends.
+Guru Vaani is a comprehensive platform designed to empower teachers through AI-assisted reflection, professional development, and administrative support.
 
-## 🏗️ Project Structure
-
-The project is organized as a monorepo with the following packages:
-
-- **`backend`**: Node.js/Express server using Prisma (SQLite) for data persistence and authentication.
-- **`teacher-web-app`**: sleek, mobile-first React application for teachers to submit reflections (text/voice).
-- **`web-dashboard`**: Admin interface for viewing analytics, managing teachers, and monitoring reflections.
-- **`shared`**: Common UI components, design tokens, and utilities shared between frontends.
-
-## 🚀 Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js (v18+)
 - npm (v9+)
 
 ### Installation
-1.  **Install Dependencies**:
-    ```bash
-    npm install
-    ```
-
-2.  **Database Setup**:
-    Initialize the SQLite database:
-    ```bash
-    cd backend
-    npx prisma migrate dev --name init
-    npx prisma generate
-    cd ..
-    ```
+```bash
+# Install dependencies for all workspaces
+npm install
+```
 
 ### Running the Platform
 To start all services (Backend, Teacher App, Admin Dashboard) concurrently:
-
 ```bash
 npm run dev
 ```
 
-Or run them individually:
-- **Backend** (Port 3001): `npm run dev:backend`
-- **Teacher App** (Port 3002): `npm run dev:web`
-- **Admin Dashboard** (Port 3004/3005): `npm run dev:dashboard`
+Or run them individually in separate terminals:
 
-## 🔑 Key Features
+**1. Backend API** (Port 3001)
+```bash
+npm run dev:backend
+```
 
-### For Teachers (Mobile App)
-- **AI-Guided Reflection**: "Share a Story" feature with mood tracking.
-- **Voice Support**: Integrated voice recording for easy input.
-- **My Entries**: View past reflections and growth insights.
+**2. Teacher Web App** (Port 5176)
+```bash
+npm run dev:web
+```
 
-### For Admins (Web Dashboard)
-- **Teacher Directory**: Track educator engagement and "Last Active" status.
-- **Reflection Analysis**: View AI-driven sentiment analysis and clustering.
-- **Settings**: Configure platform behaviors.
+**3. Admin Dashboard** (Port 5183)
+```bash
+npm run dev:dashboard
+```
 
-## 🛠️ Technology Stack
-- **Frontend**: React, Vite, Material UI (MUI), Recharts
-- **Backend**: Express.js, Prisma ORM, SQLite
-- **Authentication**: JWT & Role-Based Access Control (RBAC)
-- **Styling**: Emotion, Custom Design Tokens
+## 🏗️ Architecture
 
-## 📝 License
-Proprietary - Guru Vaani
+- **`backend`**: Node.js/Express + Prisma (SQLite). Handles Auth, Users, Reflections, and AI processing.
+- **`teacher-web-app`**: React + Vite (Mobile-first). "Your Journey" reflection tool, voice-to-text, and AI insights.
+- **`web-dashboard`**: React + Vite (Admin). Teacher directory, analytics, and platform settings.
+- **`shared`**: Shared TypeScript types, theme tokens, and utility functions.
+
+## 🔧 Troubleshooting
+
+### Common Issues
+- **Vite Dependency Error**: If you see "dependencies imported but could not be resolved", try:
+  ```bash
+  # Clear Vite cache
+  rm -rf node_modules/.vite
+  npm run dev:dashboard -- --force
+  ```
+- **Port Conflicts**: The apps define default ports (3000, 3002, 3004) but will auto-switch if busy (e.g., to 5176, 5183). Check terminal output for the active URL.
+
+## ✅ Verified Features (Phase 5)
+- **Teacher Management**: Complete directory with search/filtering and "Last Active" tracking.
+- **Settings**: Platform configuration and AI behavior controls.
+- **Reflection Page**: Admin view with correct filtering by Subject and Grade.
+- **CORS**: Configured to allow cross-origin requests from dynamic frontend ports.

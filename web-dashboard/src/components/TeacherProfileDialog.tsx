@@ -27,7 +27,6 @@ import {
     Psychology,
 } from '@mui/icons-material';
 import api from '../services/api';
-import { format } from 'date-fns';
 
 interface TeacherProfileDialogProps {
     id: string | null;
@@ -180,7 +179,7 @@ const TeacherProfileDialog: React.FC<TeacherProfileDialogProps> = ({ id, open, o
                                             >
                                                 <ListItemText
                                                     primary={ref.title || 'Untitled Reflection'}
-                                                    secondary={format(new Date(ref.createdAt), 'MMM dd, yyyy • HH:mm')}
+                                                    secondary={new Date(ref.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                                     primaryTypographyProps={{ variant: 'body2', fontWeight: 'bold' }}
                                                 />
                                                 <Chip

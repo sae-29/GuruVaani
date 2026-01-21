@@ -115,9 +115,7 @@ class GrokService {
 
       // Cache for 24 hours
       try {
-        if (redisClient) {
-          await redisClient.setEx(cacheKey, 86400, JSON.stringify(parsed));
-        }
+        await redisClient.setEx(cacheKey, 86400, JSON.stringify(parsed));
       } catch (error) {
         logger.warn('Redis cache set failed', error);
       }
@@ -157,9 +155,7 @@ class GrokService {
 
       // Cache for 24 hours
       try {
-        if (redisClient) {
-          await redisClient.setEx(cacheKey, 86400, JSON.stringify(parsed));
-        }
+        await redisClient.setEx(cacheKey, 86400, JSON.stringify(parsed));
       } catch (error) {
         logger.warn('Redis cache set failed', error);
       }

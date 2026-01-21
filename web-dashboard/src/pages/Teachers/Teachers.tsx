@@ -32,10 +32,8 @@ import {
     CheckCircle,
     Refresh,
     School as SchoolIcon,
-    AccessTime,
 } from '@mui/icons-material';
 import api from '../../services/api';
-import { formatDistanceToNow } from 'date-fns';
 import TeacherProfileDialog from '../../components/TeacherProfileDialog';
 
 interface Teacher {
@@ -257,10 +255,9 @@ const Teachers: React.FC = () => {
                                         </TableCell>
                                         <TableCell>
                                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                                <AccessTime sx={{ fontSize: 16, mr: 1, color: teacher.lastActiveAt ? 'success.main' : 'text.disabled' }} />
-                                                <Typography variant="body2" color={teacher.lastActiveAt ? 'text.primary' : 'text.disabled'}>
+                                                <Typography variant="body2" color={teacher.lastActiveAt ? 'success.main' : 'text.secondary'}>
                                                     {teacher.lastActiveAt
-                                                        ? formatDistanceToNow(new Date(teacher.lastActiveAt), { addSuffix: true }).replace('about ', '')
+                                                        ? new Date(teacher.lastActiveAt).toLocaleString()
                                                         : 'Never'}
                                                 </Typography>
                                             </Box>
