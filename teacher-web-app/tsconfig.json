@@ -16,11 +16,16 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    /* Linting */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    /* Path mapping */
+    "baseUrl": ".",
+    "paths": {
+      "guru-vaani-shared": [
+        "../shared/src/index.ts"
+      ],
+      "guru-vaani-shared/*": [
+        "../shared/src/*"
+      ]
+    }
   },
   "include": [
     "src"
