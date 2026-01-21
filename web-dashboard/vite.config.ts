@@ -7,6 +7,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      'guru-vaani-shared': path.resolve(__dirname, '../shared/src')
     },
   },
   server: {
@@ -17,6 +18,10 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
   },
   test: {
     globals: true,

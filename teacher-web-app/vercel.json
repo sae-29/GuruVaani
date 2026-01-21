@@ -1,7 +1,5 @@
 {
     "version": 2,
-    "buildCommand": "cd ../shared && npm install && npm run build && cd ../teacher-web-app && npm run build",
-    "installCommand": "npm install",
     "outputDirectory": "dist",
     "routes": [
         {
